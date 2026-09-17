@@ -1,0 +1,50 @@
+name: capacity
+on:
+  schedule:
+    - cron: "11 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: خواندن مصرف اکانت‌ها از /usage
+        run: |
+          set -e
+          U=$(curl -s -m 20 https://foxy-de.mahdi-wz10.workers.dev/usage || echo "{}")
+          echo "$U" > usage-now.json
+          python3 - << 'PY'
+          import json, datetime
+          try:
+              u = json.load(open("usage-now.json"))
+          except Exception:
+              u = {}
+          total = int(u.get("total_today", 0))
+          quota = int(u.get("quota_per_day", 100000))
+          thr   = int(u.get("threshold_pct", 80))
+          pct   = round(total * 100 / quota)
+          preferred = "acc1-mahdi-wz10" if pct < thr else "acc2-needed(توکن اکانت ۲ لازم)"
+          st = {
+            "checked_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "day": u.get("day", ""),
+            "total_today": total,
+            "quota_per_day": quota,
+            "pct": pct,
+            "threshold_pct": thr,
+            "preferred_account": preferred,
+            "rows": u.get("rows", []),
+          }
+          json.dump(st, open("capacity-status.json", "w"), ensure_ascii=False, indent=1)
+          print(f"مصرف: {total}/{quota} = {pct}% | اکانت پیش‌فرض برای گره‌های بعدی: {preferred}")
+          PY
+      - name: ثبت فقط اگر تغییر کرده
+        run: |
+          git config user.name "foxy-bot"
+          git config user.email "foxy-bot@users.noreply.github.com"
+          git add capacity-status.json usage-now.json
+          git diff --cached --quiet || (git commit -m "capacity: update" && git push)
