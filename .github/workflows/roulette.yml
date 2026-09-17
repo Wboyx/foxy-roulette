@@ -1,0 +1,20 @@
+name: roulette
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq curl unzip
+      - run: python roulette.py
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
