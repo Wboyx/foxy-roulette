@@ -8,6 +8,7 @@ XRAY = XRAY_DIR + "/xray"
 GIST = "13263cbf8ac3342eb6333825fcab2249"
 FILE = "de.txt"
 TOKEN = os.environ["GIST_TOKEN"]
+DENY = "https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/denylist.json"  # گره‌های مُرد از ایران
 COUNTRIES = [("DE", "🇩🇪 آلمان"), ("NL", "🇳🇱 هلند")]   # کشورها دونه‌دونه — اینجا اضافه شود
 TARGET = 4          # ۲ کشور × ۲ گره
 BASE_PORT = 11500
