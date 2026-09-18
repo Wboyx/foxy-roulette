@@ -1,15 +1,17 @@
 {
- "checked_at": "2026-09-18T00:28:26.864735Z",
+ "checked_at": "2026-09-18T00:30:07.242077Z",
  "nodes": {
   "de01-karlsruhe": {
-   "alive": false,
-   "ms": null,
-   "geo": null
+   "alive": true,
+   "ms": 766,
+   "geo": "",
+   "attempts": 1
   },
   "de02-falkenstein": {
    "alive": true,
-   "ms": 1018,
-   "geo": "{\"countryCode\":\"DE\",\"city\":\"Falkenstein\",\"query\":\"2.28.4.11\"}"
+   "ms": 796,
+   "geo": "{\"countryCode\":\"DE\",\"city\":\"Falkenstein\",\"query\":\"2.28.4.11\"}",
+   "attempts": 1
   }
  }
 }
