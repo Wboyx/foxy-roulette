@@ -1,4 +1,10 @@
 {
- "foxy-de2": "776e932d-9780-4d4a-a392-e39876eedbf1",
- "_host": "foxy-de3.mahdi-wz10.workers.dev"
+ "worker": "foxy-de3",
+ "uuid": "776e932d-9780-4d4a-a392-e39876eedbf1",
+ "host": "foxy-de3.mahdi-wz10.workers.dev",
+ "label": "\ud83c\udde9\ud83c\uddea Germany \ud83e\udd8a",
+ "gist_file": "de.txt",
+ "gist": "13263cbf8ac3342eb6333825fcab2249",
+ "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
+ "account": "ee9234f9f2ba43105901dffc624d696d"
 }
