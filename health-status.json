@@ -1,0 +1,15 @@
+{
+ "checked_at": "2026-09-18T00:28:26.864735Z",
+ "nodes": {
+  "de01-karlsruhe": {
+   "alive": false,
+   "ms": null,
+   "geo": null
+  },
+  "de02-falkenstein": {
+   "alive": true,
+   "ms": 1018,
+   "geo": "{\"countryCode\":\"DE\",\"city\":\"Falkenstein\",\"query\":\"2.28.4.11\"}"
+  }
+ }
+}
