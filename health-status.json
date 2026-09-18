@@ -1,11 +1,11 @@
 {
- "checked_at": "2026-09-18T05:59:49.599268Z",
+ "checked_at": "2026-09-18T11:24:16.867322Z",
  "nodes": {
   "de-falkenstein": {
-   "alive": true,
-   "ms": 1112,
-   "geo": "",
-   "attempts": 1
+   "alive": false,
+   "ms": null,
+   "geo": null,
+   "attempts": 3
   }
  }
 }
