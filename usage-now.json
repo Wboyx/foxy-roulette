@@ -1,1 +1,1 @@
-{"day":"2026-09-18","rows":[{"worker":"foxy-de2-acc1","day":"2026-09-18","n":1050},{"worker":"foxy-de-acc1","day":"2026-09-18","n":570}],"total_today":1620,"quota_per_day":100000,"plan":"free","threshold_pct":80,"account":"acc1-mahdi-wz10","active_server":"falkenstein-55597","pool_size":1}
+{"day":"2026-09-18","rows":[{"worker":"foxy-de2-acc1","day":"2026-09-18","n":1270},{"worker":"foxy-de-acc1","day":"2026-09-18","n":570}],"total_today":1840,"quota_per_day":100000,"plan":"free","threshold_pct":80,"account":"acc1-mahdi-wz10","active_server":"falkenstein-55597","pool_size":1}
