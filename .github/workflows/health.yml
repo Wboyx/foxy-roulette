@@ -16,24 +16,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: تست خروجی واقعی گره‌های آلمان
+      - name: تست خروجی واقعی گره‌ها
         run: |
           set -e
-          U1=$(python3 -c "import json;print(json.load(open('de-nodes.json'))['foxy-de'])")
           U2=$(python3 -c "import json;print(json.load(open('de-nodes.json'))['foxy-de2'])")
-          nohup python3 vless_bridge.py "$U1" 11720 foxy-de.mahdi-wz10.workers.dev > /dev/null 2>&1 &
           nohup python3 vless_bridge.py "$U2" 11721 foxy-de2.mahdi-wz10.workers.dev > /dev/null 2>&1 &
           sleep 4
           python3 - << 'PY'
           import subprocess, json, datetime, time
           nodes = {
-            "de01-karlsruhe": ("11720", "foxy-de.mahdi-wz10.workers.dev"),
-            "de02-falkenstein": ("11721", "foxy-de2.mahdi-wz10.workers.dev"),
+            "de-falkenstein": ("11721", "foxy-de2.mahdi-wz10.workers.dev"),
           }
           out = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "nodes": {}}
           for name, (port, host) in nodes.items():
               ok, ms, geo = False, None, None
-              for attempt in range(3):   # درجه ۲: سه تلاش با فاصله
+              for attempt in range(3):
                   t0 = datetime.datetime.now()
                   r = subprocess.run(["curl","-s","-o","/dev/null","-w","%{http_code}","-m","10",
                       "--socks5-hostname", f"127.0.0.1:{port}",
