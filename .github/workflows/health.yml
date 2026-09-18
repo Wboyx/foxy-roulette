@@ -1,0 +1,52 @@
+name: health
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: تست خروجی واقعی گره‌های آلمان
+        run: |
+          set -e
+          U1=$(python3 -c "import json;print(json.load(open('de-nodes.json'))['foxy-de'])")
+          U2=$(python3 -c "import json;print(json.load(open('de-nodes.json'))['foxy-de2'])")
+          nohup python3 vless_bridge.py "$U1" 11720 foxy-de.mahdi-wz10.workers.dev > /dev/null 2>&1 &
+          nohup python3 vless_bridge.py "$U2" 11721 foxy-de2.mahdi-wz10.workers.dev > /dev/null 2>&1 &
+          sleep 4
+          python3 - << 'PY'
+          import subprocess, json, datetime
+          nodes = {
+            "de01-karlsruhe": ("11720", "foxy-de.mahdi-wz10.workers.dev"),
+            "de02-falkenstein": ("11721", "foxy-de2.mahdi-wz10.workers.dev"),
+          }
+          out = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "nodes": {}}
+          for name, (port, host) in nodes.items():
+              t0 = datetime.datetime.now()
+              r = subprocess.run(["curl","-s","-o","/dev/null","-w","%{http_code}","-m","10",
+                  "--socks5-hostname", f"127.0.0.1:{port}",
+                  "https://www.gstatic.com/generate_204"], capture_output=True, text=True)
+              ms = int((datetime.datetime.now()-t0).total_seconds()*1000)
+              ok = r.stdout.strip() == "204"
+              geo = subprocess.run(["curl","-s","-m","10","--socks5-hostname",f"127.0.0.1:{port}",
+                  "http://ip-api.com/json/?fields=countryCode,city,query"], capture_output=True, text=True)
+              out["nodes"][name] = {"alive": ok, "ms": ms if ok else None, "geo": geo.stdout[:120] if ok else None}
+          json.dump(out, open("health-status.json","w"), ensure_ascii=False, indent=1)
+          print(json.dumps(out, ensure_ascii=False))
+          PY
+      - name: ثبت وضعیت
+        run: |
+          git config user.name "foxy-bot"
+          git config user.email "foxy-bot@users.noreply.github.com"
+          git add health-status.json
+          git diff --cached --quiet || (git commit -m "health: update" && git push)
