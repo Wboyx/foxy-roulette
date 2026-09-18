@@ -1,0 +1,33 @@
+name: nl-hunt
+on:
+  schedule:
+    - cron: "37 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nl-hunt
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq curl unzip
+      - name: شکار سرور پایدار هلند
+        run: python3 nl_hunt.py
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      - name: ثبت
+        run: |
+          git config user.name "foxy-bot"
+          git config user.email "foxy-bot@users.noreply.github.com"
+          git add nl-pool.json
+          git diff --cached --quiet || (git commit -m "nl-hunt: update" && git push)
