@@ -1,11 +1,7 @@
 {
- "checked_at": "2026-09-18T12:34:31.297844Z",
- "nodes": {
-  "de-falkenstein": {
-   "alive": true,
-   "ms": 1450,
-   "geo": "{\"countryCode\":\"DE\",\"city\":\"Falkenstein\",\"query\":\"2.28.4.11\"}",
-   "attempts": 1
-  }
- }
+ "checked_at": "2026-09-18T16:00:38.070053Z",
+ "worker": "foxy-de3",
+ "host": "foxy-de3.mahdi-wz10.workers.dev",
+ "alive": true,
+ "attempts": 1
 }
