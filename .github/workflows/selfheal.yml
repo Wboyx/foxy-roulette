@@ -1,23 +1,27 @@
 name: selfheal
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
+concurrency:
+  group: selfheal
+  cancel-in-progress: false
+
 jobs:
   guard:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq curl unzip
-      - name: تست + ترمیم خودکار
+      - name: تست + ترمیم خودکار (هر لوکیشن)
         run: python3 selfheal.py
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
