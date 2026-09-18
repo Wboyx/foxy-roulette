@@ -16,7 +16,7 @@ jobs:
       - name: خواندن مصرف اکانت‌ها از /usage
         run: |
           set -e
-          U=$(curl -s -m 20 https://foxy-de.mahdi-wz10.workers.dev/usage || echo "{}")
+          U=$(curl -s -m 20 https://foxy-de3.mahdi-wz10.workers.dev/usage || echo "{}")
           echo "$U" > usage-now.json
           python3 - << 'PY'
           import json, datetime
