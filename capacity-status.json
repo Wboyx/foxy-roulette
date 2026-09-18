@@ -1,16 +1,10 @@
 {
- "checked_at": "2026-09-17T23:47:23.317672Z",
- "day": "2026-09-17",
- "total_today": 10,
+ "checked_at": "2026-09-18T04:35:07.797521Z",
+ "day": "",
+ "total_today": 0,
  "quota_per_day": 100000,
  "pct": 0,
  "threshold_pct": 80,
  "preferred_account": "acc1-mahdi-wz10",
- "rows": [
-  {
-   "worker": "foxy-de2-acc1",
-   "day": "2026-09-17",
-   "n": 10
-  }
- ]
+ "rows": []
 }
