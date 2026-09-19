@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq curl unzip
-      - name: شکار سرور پایدار هلند
+      - name: شکار چندکشوری
         run: python3 nl_hunt.py
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
@@ -29,5 +29,5 @@ jobs:
         run: |
           git config user.name "foxy-bot"
           git config user.email "foxy-bot@users.noreply.github.com"
-          git add nl-pool.json
-          git diff --cached --quiet || (git commit -m "nl-hunt: update" && git push)
+          git add -A
+          git diff --cached --quiet || (git commit -m "hunt: update" && git push)
