@@ -224,7 +224,7 @@ export default {
             status: 200, headers: { "content-type": "application/json; charset=utf-8",
               "access-control-allow-origin": "*" } });
         } catch (e) {
-          return new Response(JSON.stringify({ err: String(e).slice(0, 120) }), { status: 500 });
+          return new Response(JSON.stringify({ err: "error" }), { status: 500 });
         }
       }
       if (url.pathname === "/geo") {
@@ -250,12 +250,10 @@ export default {
             headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });
         }
       }
-      return new Response("🦊 foxy-node live", {
-        status: 200, headers: { "content-type": "text/plain; charset=utf-8" },
-      });
+      return new Response("not found", { status: 404 });
     }
     // مسیر باید /{UUID} باشد تا اسکنر تصادفی نتواند از نود سوءاستفاده کند
-    if (!uuid || !url.pathname.startsWith("/" + dashed)) {
+    if (!uuid || (url.pathname !== "/" + dashed && !url.pathname.startsWith("/" + dashed + "/"))) {
       return new Response("not found", { status: 404 });
     }
     const pair = new WebSocketPair();
