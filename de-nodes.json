@@ -2,10 +2,9 @@
  "nodes": [
   {
    "id": "de",
-   "prefix": "foxy-de",
-   "worker": "foxy-de3",
-   "host": "foxy-de3.mahdi-wz10.workers.dev",
-   "label": "🇩🇪 Germany 🦊",
+   "worker": "foxy-de-818812",
+   "host": "foxy-de-818812.mahdi-wz10.workers.dev",
+   "label": "\ud83c\udde9\ud83c\uddea Germany \ud83e\udd8a",
    "srv_id": "de",
    "pool_file": "de-pool.json",
    "gist_file": "de.txt",
@@ -15,10 +14,9 @@
   },
   {
    "id": "us",
-   "prefix": "foxy-us",
    "worker": "foxy-us-818737",
    "host": "foxy-us-818737.mahdi-wz10.workers.dev",
-   "label": "🇺🇸 United States 🦊",
+   "label": "\ud83c\uddfa\ud83c\uddf8 United States \ud83e\udd8a",
    "srv_id": "us",
    "pool_file": "us-pool.json",
    "gist_file": "de.txt",
@@ -28,10 +26,9 @@
   },
   {
    "id": "gb",
-   "prefix": "foxy-gb",
    "worker": "foxy-gb",
    "host": "foxy-gb.mahdi-wz10.workers.dev",
-   "label": "🇬🇧 United Kingdom 🦊",
+   "label": "\ud83c\uddec\ud83c\udde7 United Kingdom \ud83e\udd8a",
    "srv_id": "gb",
    "pool_file": "gb-pool.json",
    "gist_file": "de.txt",
