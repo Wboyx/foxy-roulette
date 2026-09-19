@@ -1,0 +1,30 @@
+[
+ {
+  "n": "ca-vancouver-0",
+  "h": "149.22.95.183",
+  "p": "443",
+  "k": "shadowsocks",
+  "kl": "16"
+ },
+ {
+  "n": "ca-beauharnois-1",
+  "h": "51.79.85.185",
+  "p": "8118",
+  "k": "cdBIDV42DCwnfIN",
+  "kl": "32"
+ },
+ {
+  "n": "ca-beauharnois-2",
+  "h": "51.222.155.113",
+  "p": "5601",
+  "k": "Y6R9pAtvxxzmGC",
+  "kl": "32"
+ },
+ {
+  "n": "ca-beauharnois-3",
+  "h": "51.222.200.165",
+  "p": "5000",
+  "k": "Y6R9pAtvxxzmGC",
+  "kl": "32"
+ }
+]
