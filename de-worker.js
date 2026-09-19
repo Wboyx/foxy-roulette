@@ -214,7 +214,7 @@ export default {
             "SELECT worker, day, n FROM node_usage WHERE day = date('now')").all();
           const tot = (rows.results || []).reduce((s, r) => s + (r.n || 0), 0);
           let act = null;
-          try { act = (await env.DB.prepare("SELECT name FROM active_srv WHERE id='de'").first() || {}).name || null; } catch {}
+          try { act = (await env.DB.prepare("SELECT name FROM active_srv WHERE id = ?").bind(String(env.SRV_ID || "de")).first() || {}).name || null; } catch {}
           return new Response(JSON.stringify({ day: new Date().toISOString().slice(0, 10),
             rows: rows.results || [], total_today: tot, quota_per_day: 100000, plan: "free",
             threshold_pct: 80, account: "acc1-mahdi-wz10", active_server: act,
@@ -441,7 +441,7 @@ async function serveWs(server, uuid, env) {
         let order = pool, curName = null;
         try {
           if (env.DB) {
-            const a = await env.DB.prepare("SELECT name FROM active_srv WHERE id='de'").first();
+            const a = await env.DB.prepare("SELECT name FROM active_srv WHERE id = ?").bind(String(env.SRV_ID || "de")).first();
             curName = (a && a.name) || null;
             if (curName) order = [...pool].sort((x, y) => (x.n === curName ? -1 : (y.n === curName ? 1 : 0)));
           }
@@ -466,9 +466,9 @@ async function serveWs(server, uuid, env) {
         }
         if (env.DB && opened.srv.n !== curName) {
           env.DB.prepare(
-            "INSERT INTO active_srv (id, name, updated) VALUES ('de', ?1, datetime('now')) " +
+            "INSERT INTO active_srv (id, name, updated) VALUES (?2, ?1, datetime('now')) " +
             "ON CONFLICT(id) DO UPDATE SET name = ?1, updated = datetime('now')")
-            .bind(opened.srv.n).run().catch(() => {});
+            .bind(opened.srv.n, String(env.SRV_ID || "de")).run().catch(() => {});
         }
         server.send(vlessResponseHeader());
         (async () => {
