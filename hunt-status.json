@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-09-19T20:56:56.467296Z",
+ "checked_at": "2026-09-19T22:14:38.610057Z",
  "counts": {
   "NL": 4,
   "FR": 16,
@@ -15,16 +15,16 @@
   "NL": 1,
   "FR": 0,
   "GB": 5,
-  "CA": 4,
+  "CA": 6,
   "SG": 0,
   "JP": 5,
   "CH": 0,
   "SE": 0,
   "AT": 0
  },
- "enabled": [
+ "enabled": [],
+ "refreshed": [
   "CA"
  ],
- "refreshed": [],
  "de_rescue": null
 }
