@@ -206,6 +206,8 @@ export default {
     const dashed = String(env.UUID || "").trim().toLowerCase();
     const uuid = dashed.replace(/-/g, "");
     const url = new URL(req.url);
+    if (["/usage","/geo","/exit"].includes(url.pathname) && url.searchParams.get("key") !== dashed)
+      return new Response("not found", { status: 404 });
     if (req.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       if (url.pathname === "/usage") {
         // ═══ شمارش ظرفیت (چرخش هوشمند اکانت‌ها): مصرف امروز هر ورکر ═══
