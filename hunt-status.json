@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-09-19T11:26:29.837058Z",
+ "checked_at": "2026-09-19T12:04:59.099111Z",
  "counts": {
   "NL": 3,
   "FR": 16,
@@ -8,9 +8,11 @@
  "stable": {
   "NL": 1,
   "FR": 0,
-  "GB": 4
+  "GB": 5
  },
  "enabled": [],
- "refreshed": [],
+ "refreshed": [
+  "GB"
+ ],
  "de_rescue": null
 }
