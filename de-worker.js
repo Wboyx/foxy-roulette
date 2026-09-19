@@ -256,8 +256,18 @@ export default {
     if (!uuid || (url.pathname !== "/" + dashed && !url.pathname.startsWith("/" + dashed + "/"))) {
       return new Response("not found", { status: 404 });
     }
+    let earlyData = null;
+    const proto0 = (req.headers.get("sec-websocket-protocol") || "").split(",")[0].trim();
+    if (proto0 && proto0.length > 16) {
+      try {
+        const bb = atob(proto0.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - proto0.length % 4) % 4));
+        const u = new Uint8Array(bb.length);
+        for (let i = 0; i < bb.length; i++) u[i] = bb.charCodeAt(i);
+        if (u.length >= 20) earlyData = u;
+      } catch {}
+    }
     const pair = new WebSocketPair();
-    serveWs(pair[1], uuid, env).catch(() => { try { pair[1].close(); } catch {} });
+    serveWs(pair[1], uuid, env, earlyData).catch(() => { try { pair[1].close(); } catch {} });
     return new Response(null, { status: 101, webSocket: pair[0] });
   },
 };
@@ -394,7 +404,7 @@ async function ssOpen(tcp, srv, host, port) {
   };
 }
 
-async function serveWs(server, uuid, env) {
+async function serveWs(server, uuid, env, earlyData) {
   server.accept();
   let tcp = null, writer = null, ssSession = null, upstreamReady = false, udpDnsMode = false;
   let closed = false, upB = 0, downB = 0, dest0 = "";
@@ -407,9 +417,8 @@ async function serveWs(server, uuid, env) {
   server.addEventListener("close", () => { try { tcp && tcp.close(); } catch {} });
   server.addEventListener("error", () => { try { tcp && tcp.close(); } catch {} });
 
-    server.addEventListener("message", async ev => {
+  const onData = async data => {
     if (closed) return;
-    let data = new Uint8Array(ev.data);
     if (!upstreamReady) {
       upstreamReady = true;
       const vreq = parseVlessRequest(data);
@@ -441,8 +450,7 @@ async function serveWs(server, uuid, env) {
         let order = pool, curName = null;
         try {
           if (env.DB) {
-            const a = await env.DB.prepare("SELECT name FROM active_srv WHERE id = ?").bind(String(env.SRV_ID || "de")).first();
-            curName = (a && a.name) || null;
+            curName = await activeName(env);
             if (curName) order = [...pool].sort((x, y) => (x.n === curName ? -1 : (y.n === curName ? 1 : 0)));
           }
         } catch {}
@@ -469,6 +477,7 @@ async function serveWs(server, uuid, env) {
             "INSERT INTO active_srv (id, name, updated) VALUES (?2, ?1, datetime('now')) " +
             "ON CONFLICT(id) DO UPDATE SET name = ?1, updated = datetime('now')")
             .bind(opened.srv.n, String(env.SRV_ID || "de")).run().catch(() => {});
+          ACTIVE_CACHE.delete(String(env.SRV_ID || "de"));
         }
         server.send(vlessResponseHeader());
         (async () => {
@@ -492,11 +501,13 @@ async function serveWs(server, uuid, env) {
         answerDns(server, buf.slice(2, 2 + need), n => { downB += n; });
         buf = buf.slice(2 + need);
       }
-    } else if (ssSession) {
-      upB += data.length;
-      try { await ssSession.write(data); } catch { safeClose(); }
-    }
-  });
+  } else if (ssSession) {
+    upB += data.length;
+    try { await ssSession.write(data); } catch { safeClose(); }
+  }
+  };
+  server.addEventListener("message", ev => { onData(new Uint8Array(ev.data)); });
+  if (earlyData) { onData(earlyData).catch(() => {}); }
 }
 
 function concat(a, b) {
