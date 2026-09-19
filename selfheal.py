@@ -7,7 +7,6 @@ GH = os.environ["GIST_TOKEN"]
 CF = os.environ["CF_API_TOKEN"]
 STATE = json.load(open("de-nodes.json"))
 NODES = STATE["nodes"] if "nodes" in STATE else [STATE]   # سازگاری با ساختار قدیمی
-POOL = json.load(open("de-pool.json"))
 BASE_PORT = 11740
 
 def api(url, method="GET", body=None, token=GH):
@@ -54,11 +53,13 @@ def repair(node):
     new_host = f"{new_name}.mahdi-wz10.workers.dev"
     boundary = "----foxy" + stamp
     code = open("de-worker.js", "rb").read()
+    node_pool = json.load(open(node.get("pool_file", "de-pool.json")))
     meta = {"main_module": "worker.js", "compatibility_date": "2024-09-23",
             "bindings": [
               {"type": "plain_text", "name": "UUID", "text": node["uuid"]},
               {"type": "plain_text", "name": "WNAME", "text": node.get("id", "de") + "-acc1"},
-              {"type": "plain_text", "name": "SS_POOL", "text": json.dumps(POOL)},
+              {"type": "plain_text", "name": "SRV_ID", "text": node.get("srv_id", node.get("id", "de"))},
+              {"type": "plain_text", "name": "SS_POOL", "text": json.dumps(node_pool)},
               {"type": "d1", "name": "DB", "id": node["d1"]}]}
     body = (f"--{boundary}\r\ncontent-disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\n"
             f"content-type: application/json\r\n\r\n{json.dumps(meta)}\r\n"
@@ -79,10 +80,21 @@ def repair(node):
     # ۴) پیچ gist — همان UUID و برچسب، فقط میزبان نو
     q = urllib.parse.urlencode({"encryption": "none", "security": "tls", "sni": new_host, "fp": "chrome",
                                 "type": "ws", "host": new_host, "path": "/" + node["uuid"], "alpn": "http/1.1"})
-    content = f"vless://{node['uuid']}@{new_host}:443?{q}#{urllib.parse.quote(node['label'])}"
+    new_line = f"vless://{node['uuid']}@{new_host}:443?{q}#{urllib.parse.quote(node['label'])}"
+    gist = api(f"https://api.github.com/gists/{node['gist']}")
+    content = gist["files"][node["gist_file"]]["content"]
+    lines = [l for l in content.splitlines() if l.strip()]
+    replaced = False
+    for i, l in enumerate(lines):
+        if f"vless://{node['uuid']}@" in l:
+            lines[i] = new_line
+            replaced = True
+            break
+    if not replaced:
+        lines.append(new_line)
     api(f"https://api.github.com/gists/{node['gist']}", "PATCH",
-        {"files": {node["gist_file"]: {"content": content}}})
-    print("gist پیچ شد ✅")
+        {"files": {node["gist_file"]: {"content": "\n".join(lines)}}})
+    print("gist پیچ شد (line-aware) ✅")
     node["worker"], node["host"] = new_name, new_host
     return new_name, new_host
 
