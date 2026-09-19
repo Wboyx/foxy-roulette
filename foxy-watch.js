@@ -46,7 +46,9 @@ async function check(env) {
 const MAP = { "\u{1F1E9}\u{1F1EA}": "de", "\u{1F1FA}\u{1F1F8}": "us", "\u{1F1EC}\u{1F1E7}": "gb",
 "\u{1F1F3}\u{1F1F1}": "nl", "\u{1F1EB}\u{1F1F7}": "fr", "\u{1F1E8}\u{1F1E6}": "ca",
 "\u{1F1F8}\u{1F1EC}": "sg", "\u{1F1EF}\u{1F1F5}": "jp", "\u{1F1E8}\u{1F1ED}": "ch",
-"\u{1F1F8}\u{1F1EA}": "se", "\u{1F1E6}\u{1F1F9}": "at" };
+"\u{1F1F8}\u{1F1EA}": "se", "\u{1F1E6}\u{1F1F9}": "at", "\u{1F1F9}\u{1F1F7}": "tr",
+"\u{1F1E6}\u{1F1EA}": "ae", "\u{1F1F7}\u{1F1FA}": "ru", "\u{1F1F5}\u{1F1F1}": "pl",
+"\u{1F1EE}\u{1F1F9}": "it" };
 async function svcStatus(svc, uuid) {
   try {
     const r = await svc.fetch("https://svc/usage?key=" + uuid);
