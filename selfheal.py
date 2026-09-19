@@ -120,7 +120,9 @@ def sync_nodes_file():
     flagmap = {"\U0001F1E9\U0001F1EA": "de", "\U0001F1FA\U0001F1F8": "us", "\U0001F1EC\U0001F1E7": "gb",
                "\U0001F1F3\U0001F1F1": "nl", "\U0001F1EB\U0001F1F7": "fr", "\U0001F1E8\U0001F1E6": "ca",
                "\U0001F1F8\U0001F1EC": "sg", "\U0001F1EF\U0001F1F5": "jp", "\U0001F1E8\U0001F1ED": "ch",
-               "\U0001F1F8\U0001F1EA": "se", "\U0001F1E6\U0001F1F9": "at"}
+               "\U0001F1F8\U0001F1EA": "se", "\U0001F1E6\U0001F1F9": "at", "\U0001F1F9\U0001F1F7": "tr",
+               "\U0001F1E6\U0001F1EA": "ae", "\U0001F1F7\U0001F1FA": "ru", "\U0001F1F5\U0001F1F1": "pl",
+               "\U0001F1EE\U0001F1F9": "it"}
     nodes = []
     for l in content.splitlines():
         if not l.startswith("vless://"): continue
