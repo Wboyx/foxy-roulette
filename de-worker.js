@@ -418,6 +418,59 @@ async function activeName(env) {
   } catch { return c ? c.name : null; }
 }
 
+// ═══ کلاینت VLESS-TCP خام برای اعضای استخرِ vless ═══
+function concat2(arrs) {
+  const len = arrs.reduce((s, a) => s + a.length, 0);
+  const out = new Uint8Array(len);
+  let o = 0;
+  for (const a of arrs) { out.set(a, o); o += a.length; }
+  return out;
+}
+function vlessClientHeader(uuidDashed, host, port) {
+  const hex = uuidDashed.replace(/-/g, "");
+  const id = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) id[i] = parseInt(hex.substr(i * 2, 2), 16);
+  let addr;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+    const p = host.split(".");
+    addr = new Uint8Array(5);
+    addr[0] = 1;
+    for (let i = 0; i < 4; i++) addr[i + 1] = +p[i];
+  } else {
+    const hb = new TextEncoder().encode(host);
+    addr = new Uint8Array(2 + hb.length);
+    addr[0] = 2; addr[1] = hb.length;
+    addr.set(hb, 2);
+  }
+  const head = new Uint8Array(19);
+  head[0] = 0;
+  head.set(id, 1);
+  head[17] = 0;
+  head[18] = 1;
+  return concat2([head, new Uint8Array([(port >> 8) & 255, port & 255]), addr]);
+}
+async function vlessOpen(tcp, member, host, port) {
+  const w = tcp.writable.getWriter();
+  const reader = tcp.readable.getReader();
+  await w.write(vlessClientHeader(member.uuid, host, port));
+  let buf = new Uint8Array(0);
+  while (buf.length < 2) {
+    const { done, value } = await reader.read();
+    if (done || !value || !value.length) throw new Error("vless-member-closed");
+    buf = concat2([buf, value]);
+  }
+  if (buf[0] !== 0 || buf[1] !== 0) throw new Error("vless-member-reject");
+  let pending = buf.slice(2);
+  return {
+    async read() {
+      if (pending && pending.length) { const o = pending; pending = null; return o; }
+      const { done, value } = await reader.read();
+      return (done || !value || !value.length) ? null : value;
+    },
+    write(d) { return w.write(d); },
+  };
+}
+
 async function serveWs(server, uuid, env, earlyData) {
   server.accept();
   let tcp = null, writer = null, ssSession = null, upstreamReady = false, udpDnsMode = false;
@@ -471,12 +524,13 @@ async function serveWs(server, uuid, env, earlyData) {
         } catch {}
         let opened = null;
         let lastErr = "";
-        for (const srv of order.slice(0, 3)) {
+        for (const srv of order) {
           try {
             const c = connect({ hostname: srv.h, port: parseInt(srv.p, 10) });
-            const ss = await ssOpen(c, srv, host, port);
-            await ss.write(payload);
-            opened = { ss, srv };
+            const sess = (srv.proto === "vless") ? await vlessOpen(c, srv, host, port)
+                                                 : await ssOpen(c, srv, host, port);
+            await sess.write(payload);
+            opened = { ss: sess, srv };
             break;
           } catch (e) { lastErr = String(e && e.message || e).slice(0, 100); continue; }
         }
