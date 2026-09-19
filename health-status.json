@@ -1,22 +1,17 @@
 {
- "checked_at": "2026-09-19T11:51:25.863611Z",
+ "checked_at": "2026-09-19T11:56:43.981596Z",
  "nodes": {
   "de": {
    "alive": true,
    "attempts": 1,
-   "worker": "foxy-de3",
-   "host": "foxy-de3.mahdi-wz10.workers.dev"
+   "worker": "foxy-de-818812",
+   "host": "foxy-de-818812.mahdi-wz10.workers.dev"
   },
   "us": {
-   "alive": false,
-   "attempts": 3,
-   "worker": "foxy-us",
-   "host": "foxy-us.mahdi-wz10.workers.dev",
-   "repaired": true,
-   "new_worker": "foxy-us-818737",
-   "new_host": "foxy-us-818737.mahdi-wz10.workers.dev",
-   "repair_alive": true,
-   "repair_attempts": 1
+   "alive": true,
+   "attempts": 1,
+   "worker": "foxy-us-818737",
+   "host": "foxy-us-818737.mahdi-wz10.workers.dev"
   },
   "gb": {
    "alive": true,
