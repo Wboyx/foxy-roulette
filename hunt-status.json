@@ -1,0 +1,16 @@
+{
+ "checked_at": "2026-09-19T09:07:54.867648Z",
+ "counts": {
+  "NL": 3,
+  "FR": 16,
+  "GB": 9
+ },
+ "stable": {
+  "NL": 1,
+  "FR": 0,
+  "GB": 5
+ },
+ "enabled": [],
+ "refreshed": [],
+ "de_rescue": null
+}
