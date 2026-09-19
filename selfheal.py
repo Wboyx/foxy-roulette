@@ -19,10 +19,10 @@ def api(url, method="GET", body=None, token=GH):
     return json.load(urllib.request.urlopen(req, timeout=40))
 
 def test_alive(node, port):
-    node_uuid = gist_uuid_for(node)
+    node_uuid, node_host = gist_conn(node)
     def run_bridge():
         try:
-            subprocess.run(["python3", "-u", "vless_bridge.py", node_uuid, str(port), node["host"]],
+            subprocess.run(["python3", "-u", "vless_bridge.py", node_uuid, str(port), node_host],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=150)
         except Exception:
             pass
@@ -39,17 +39,18 @@ def test_alive(node, port):
         time.sleep(4)
     return result
 
-def gist_uuid_for(node):
-    """uuid نود را از خطش در gist می‌خواند — ریپوی عمومی هرگز uuid ندارد."""
+def gist_conn(node):
+    """(uuid, host) نود را از خطش در gist می‌خواند — ریپو هرگز uuid/host قطعی ندارد."""
     gist = api(f"https://api.github.com/gists/{node['gist']}")
     content = gist["files"][node["gist_file"]]["content"]
+    flag = urllib.parse.quote(node["label"][:2])
     for l in content.splitlines():
-        if l.startswith("vless://") and f"@{node['host']}:" in l:
-            return l[8:].split("@")[0]
-    raise RuntimeError(f"خط gist برای {node['host']} پیدا نشد")
+        if l.startswith("vless://") and flag in l:
+            return l[8:].split("@")[0], l.split("@")[1].split(":")[0]
+    raise RuntimeError(f"خط gist برای {node['label']} پیدا نشد")
 
 def repair(node):
-    node_uuid = gist_uuid_for(node)
+    node_uuid, _old_host = gist_conn(node)
     # ۱) حذف ورکر خراب
     try:
         api(f"https://api.cloudflare.com/client/v4/accounts/{node['account']}/workers/scripts/{node['worker']}",
@@ -106,8 +107,65 @@ def repair(node):
     api(f"https://api.github.com/gists/{node['gist']}", "PATCH",
         {"files": {node["gist_file"]: {"content": "\n".join(lines)}}})
     print("gist پیچ شد (line-aware) ✅")
+    sync_nodes_file()
+    redeploy_watch()
     node["worker"], node["host"] = new_name, new_host
     return new_name, new_host
+
+
+def sync_nodes_file():
+    """de-nodes.json را از gist بازسازی می‌کند (worker/host همیشه واقعی)."""
+    gist = api("https://api.github.com/gists/13263cbf8ac3342eb6333825fcab2249")
+    content = gist["files"]["de.txt"]["content"]
+    flagmap = {"\U0001F1E9\U0001F1EA": "de", "\U0001F1FA\U0001F1F8": "us", "\U0001F1EC\U0001F1E7": "gb",
+               "\U0001F1F3\U0001F1F1": "nl", "\U0001F1EB\U0001F1F7": "fr"}
+    nodes = []
+    for l in content.splitlines():
+        if not l.startswith("vless://"): continue
+        try: label = urllib.parse.unquote(l.split("#")[1] or "")
+        except Exception: continue
+        cid = flagmap.get(label[:2])
+        if not cid: continue
+        host = l.split("@")[1].split(":")[0]
+        nodes.append({"id": cid, "worker": host.split(".")[0], "host": host, "label": label,
+                      "srv_id": cid, "pool_file": f"{cid}-pool.json", "gist_file": "de.txt",
+                      "gist": "13263cbf8ac3342eb6333825fcab2249",
+                      "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
+                      "account": "ee9234f9f2ba43105901dffc624d696d"})
+    api("https://api.github.com/repos/Wboyx/foxy-roulette/contents/de-nodes.json", "PUT",
+        {"message": "sync nodes from gist (post-repair)",
+         "content": base64.b64encode(json.dumps({"nodes": nodes}, indent=1).encode()).decode()})
+    return nodes
+
+def redeploy_watch():
+    """نگهبان را با bindingهای نو سیم‌کشی می‌کند (بعد از هر ترمیم)."""
+    import uuid as ul
+    nodes = sync_nodes_file()
+    code = open("foxy-watch.js", "rb").read()
+    key = open("watch-key.txt").read().strip()
+    bindings = [
+        {"type": "plain_text", "name": "KEY", "text": key},
+        {"type": "secret_text", "name": "GH", "text": GH},
+        {"type": "plain_text", "name": "GIST_RAW",
+         "text": "https://gist.githubusercontent.com/Wboyx/13263cbf8ac3342eb6333825fcab2249/raw/de.txt"},
+        {"type": "plain_text", "name": "NODE_IDS", "text": ",".join(n["id"] for n in nodes)},
+        {"type": "d1", "name": "DB", "id": "3dccbbba-1f23-4664-9803-845e985663b8"}]
+    for n in nodes:
+        bindings.append({"type": "service", "name": "S_" + n["id"].upper(),
+                         "service": n["worker"], "environment": "production"})
+    meta = {"main_module": "worker.js", "compatibility_date": "2024-09-23",
+            "bindings": bindings, "schedules": [{"cron": "*/5 * * * *"}]}
+    b = str(ul.uuid4())
+    body = (f"--{b}\r\ncontent-disposition: form-data; name=\"metadata\"; filename=\"m.json\"\r\n"
+            f"content-type: application/json\r\n\r\n{json.dumps(meta)}\r\n"
+            f"--{b}\r\ncontent-disposition: form-data; name=\"worker.js\"; filename=\"worker.js\"\r\n"
+            f"content-type: application/javascript+module\r\n\r\n").encode() + code + f"\r\n--{b}--\r\n".encode()
+    req = urllib.request.Request(
+        "https://api.cloudflare.com/client/v4/accounts/ee9234f9f2ba43105901dffc624d696d/workers/scripts/foxy-watch",
+        method="PUT", data=body,
+        headers={"Authorization": "Bearer " + CF, "content-type": f"multipart/form-data; boundary={b}"})
+    out = json.load(urllib.request.urlopen(req, timeout=90))
+    print("نگهبان بازسیم شد:", out.get("success"))
 
 def main():
     # گارد: بدون ابزار تست هرگز چیزی را حذف نکن (ضد false-negative)
