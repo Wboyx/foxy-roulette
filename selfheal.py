@@ -118,7 +118,9 @@ def sync_nodes_file():
     gist = api("https://api.github.com/gists/13263cbf8ac3342eb6333825fcab2249")
     content = gist["files"]["de.txt"]["content"]
     flagmap = {"\U0001F1E9\U0001F1EA": "de", "\U0001F1FA\U0001F1F8": "us", "\U0001F1EC\U0001F1E7": "gb",
-               "\U0001F1F3\U0001F1F1": "nl", "\U0001F1EB\U0001F1F7": "fr"}
+               "\U0001F1F3\U0001F1F1": "nl", "\U0001F1EB\U0001F1F7": "fr", "\U0001F1E8\U0001F1E6": "ca",
+               "\U0001F1F8\U0001F1EC": "sg", "\U0001F1EF\U0001F1F5": "jp", "\U0001F1E8\U0001F1ED": "ch",
+               "\U0001F1F8\U0001F1EA": "se", "\U0001F1E6\U0001F1F9": "at"}
     nodes = []
     for l in content.splitlines():
         if not l.startswith("vless://"): continue
