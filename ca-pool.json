@@ -14,17 +14,17 @@
   "kl": "32"
  },
  {
-  "n": "ca-montreal-2",
-  "h": "51.79.64.198",
-  "p": "8119",
-  "k": "cdBIDV42DCwnfIN",
+  "n": "ca-beauharnois-2",
+  "h": "51.222.155.113",
+  "p": "5601",
+  "k": "Y6R9pAtvxxzmGC",
   "kl": "32"
  },
  {
-  "n": "ca-montreal-3",
-  "h": "51.222.136.236",
-  "p": "8882",
-  "k": "kDWvXYZoTBcGkC4",
+  "n": "ca-beauharnois-3",
+  "h": "51.222.200.165",
+  "p": "5000",
+  "k": "Y6R9pAtvxxzmGC",
   "kl": "32"
  }
 ]
