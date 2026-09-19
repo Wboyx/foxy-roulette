@@ -19,9 +19,10 @@ def api(url, method="GET", body=None, token=GH):
     return json.load(urllib.request.urlopen(req, timeout=40))
 
 def test_alive(node, port):
+    node_uuid = gist_uuid_for(node)
     def run_bridge():
         try:
-            subprocess.run(["python3", "-u", "vless_bridge.py", node["uuid"], str(port), node["host"]],
+            subprocess.run(["python3", "-u", "vless_bridge.py", node_uuid, str(port), node["host"]],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=150)
         except Exception:
             pass
@@ -38,7 +39,17 @@ def test_alive(node, port):
         time.sleep(4)
     return result
 
+def gist_uuid_for(node):
+    """uuid نود را از خطش در gist می‌خواند — ریپوی عمومی هرگز uuid ندارد."""
+    gist = api(f"https://api.github.com/gists/{node['gist']}")
+    content = gist["files"][node["gist_file"]]["content"]
+    for l in content.splitlines():
+        if l.startswith("vless://") and f"@{node['host']}:" in l:
+            return l[8:].split("@")[0]
+    raise RuntimeError(f"خط gist برای {node['host']} پیدا نشد")
+
 def repair(node):
+    node_uuid = gist_uuid_for(node)
     # ۱) حذف ورکر خراب
     try:
         api(f"https://api.cloudflare.com/client/v4/accounts/{node['account']}/workers/scripts/{node['worker']}",
@@ -56,7 +67,7 @@ def repair(node):
     node_pool = json.load(open(node.get("pool_file", "de-pool.json")))
     meta = {"main_module": "worker.js", "compatibility_date": "2024-09-23",
             "bindings": [
-              {"type": "plain_text", "name": "UUID", "text": node["uuid"]},
+              {"type": "plain_text", "name": "UUID", "text": node_uuid},
               {"type": "plain_text", "name": "WNAME", "text": node.get("id", "de") + "-acc1"},
               {"type": "plain_text", "name": "SRV_ID", "text": node.get("srv_id", node.get("id", "de"))},
               {"type": "plain_text", "name": "SS_POOL", "text": json.dumps(node_pool)},
@@ -79,14 +90,14 @@ def repair(node):
         "POST", {"enabled": True}, token=CF)
     # ۴) پیچ gist — همان UUID و برچسب، فقط میزبان نو
     q = urllib.parse.urlencode({"encryption": "none", "security": "tls", "sni": new_host, "fp": "chrome",
-                                "type": "ws", "host": new_host, "path": "/" + node["uuid"], "alpn": "http/1.1"})
-    new_line = f"vless://{node['uuid']}@{new_host}:443?{q}#{urllib.parse.quote(node['label'])}"
+                                "type": "ws", "host": new_host, "path": "/" + node_uuid, "alpn": "http/1.1"})
+    new_line = f"vless://{node_uuid}@{new_host}:443?{q}#{urllib.parse.quote(node['label'])}"
     gist = api(f"https://api.github.com/gists/{node['gist']}")
     content = gist["files"][node["gist_file"]]["content"]
     lines = [l for l in content.splitlines() if l.strip()]
     replaced = False
     for i, l in enumerate(lines):
-        if f"vless://{node['uuid']}@" in l:
+        if f"@{node['host']}:" in l and l.startswith("vless://"):
             lines[i] = new_line
             replaced = True
             break
@@ -99,6 +110,10 @@ def repair(node):
     return new_name, new_host
 
 def main():
+    # گارد: بدون ابزار تست هرگز چیزی را حذف نکن (ضد false-negative)
+    for f in ("vless_bridge.py", "de-worker.js"):
+        if not os.path.exists(f):
+            raise SystemExit(f"فایل {f} نیست — لغو کامل (هیچ حذفی انجام نشد)")
     out = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "nodes": {}}
     dirty = False
     for i, node in enumerate(NODES):
