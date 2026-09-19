@@ -218,6 +218,14 @@ def enable_country(cc, stable):
              "gist_file": "de.txt", "gist": GIST, "d1": D1, "account": ACC}
     nodes["nodes"] = [n for n in nodes["nodes"] if n["id"] != cc.lower()] + [entry]
     put_repo("de-nodes.json", json.dumps(nodes, indent=1), f"node {cc} added (no secrets)")
+    # درجه ۴: نگهبان باید نود نو را ببیند — بازسیم‌کشی فوری (از selfheal):
+    try:
+        import selfheal
+        selfheal.sync_nodes_file()
+        selfheal.redeploy_watch()
+        print("نگهبان برای نود نو بازسیم شد ✅")
+    except Exception as e:
+        print("هشدار بازسیم نگهبان:", str(e)[:120])
     print(f"✅ {cc} فعال شد — استخر {len(pool)} عضوی")
     return True
 
