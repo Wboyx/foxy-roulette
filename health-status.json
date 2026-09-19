@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-09-19T11:49:34.858921Z",
+ "checked_at": "2026-09-19T11:51:25.863611Z",
  "nodes": {
   "de": {
    "alive": true,
@@ -8,14 +8,19 @@
    "host": "foxy-de3.mahdi-wz10.workers.dev"
   },
   "us": {
-   "alive": true,
+   "alive": false,
    "attempts": 3,
    "worker": "foxy-us",
-   "host": "foxy-us.mahdi-wz10.workers.dev"
+   "host": "foxy-us.mahdi-wz10.workers.dev",
+   "repaired": true,
+   "new_worker": "foxy-us-818737",
+   "new_host": "foxy-us-818737.mahdi-wz10.workers.dev",
+   "repair_alive": true,
+   "repair_attempts": 1
   },
   "gb": {
    "alive": true,
-   "attempts": 2,
+   "attempts": 1,
    "worker": "foxy-gb",
    "host": "foxy-gb.mahdi-wz10.workers.dev"
   }

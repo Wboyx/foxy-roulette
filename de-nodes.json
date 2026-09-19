@@ -16,8 +16,8 @@
   {
    "id": "us",
    "prefix": "foxy-us",
-   "worker": "foxy-us",
-   "host": "foxy-us.mahdi-wz10.workers.dev",
+   "worker": "foxy-us-818737",
+   "host": "foxy-us-818737.mahdi-wz10.workers.dev",
    "label": "🇺🇸 United States 🦊",
    "srv_id": "us",
    "pool_file": "us-pool.json",
