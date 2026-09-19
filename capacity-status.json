@@ -1,21 +1,16 @@
 {
- "checked_at": "2026-09-18T21:37:07.352744Z",
- "day": "2026-09-18",
- "total_today": 1840,
+ "checked_at": "2026-09-19T00:14:01.294005Z",
+ "day": "2026-09-19",
+ "total_today": 70,
  "quota_per_day": 100000,
- "pct": 2,
+ "pct": 0,
  "threshold_pct": 80,
  "preferred_account": "acc1-mahdi-wz10",
  "rows": [
   {
-   "worker": "foxy-de2-acc1",
-   "day": "2026-09-18",
-   "n": 1270
-  },
-  {
-   "worker": "foxy-de-acc1",
-   "day": "2026-09-18",
-   "n": 570
+   "worker": "de-acc1",
+   "day": "2026-09-19",
+   "n": 70
   }
  ]
 }
