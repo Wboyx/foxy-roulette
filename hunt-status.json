@@ -1,9 +1,9 @@
 {
- "checked_at": "2026-09-19T12:46:30.823673Z",
+ "checked_at": "2026-09-19T16:01:44.923897Z",
  "counts": {
   "NL": 3,
   "FR": 16,
-  "GB": 9,
+  "GB": 8,
   "CA": 19,
   "SG": 3,
   "JP": 6,
@@ -14,17 +14,18 @@
  "stable": {
   "NL": 1,
   "FR": 0,
-  "GB": 4,
-  "CA": 1,
+  "GB": 5,
+  "CA": 0,
   "SG": 0,
   "JP": 5,
   "CH": 0,
   "SE": 0,
   "AT": 0
  },
- "enabled": [
+ "enabled": [],
+ "refreshed": [
+  "GB",
   "JP"
  ],
- "refreshed": [],
  "de_rescue": null
 }
