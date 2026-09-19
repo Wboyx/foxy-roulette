@@ -1,0 +1,16 @@
+[
+ {
+  "n": "gb-stretford-0",
+  "h": "141.98.101.181",
+  "p": "443",
+  "k": "shadowsocks",
+  "kl": "16"
+ },
+ {
+  "n": "gb-portsmouth-1",
+  "h": "149.102.149.207",
+  "p": "443",
+  "k": "LXchLsIwtCeUAUgu",
+  "kl": "32"
+ }
+]
