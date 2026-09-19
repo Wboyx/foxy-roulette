@@ -134,9 +134,13 @@ def sync_nodes_file():
                       "gist": "13263cbf8ac3342eb6333825fcab2249",
                       "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
                       "account": "ee9234f9f2ba43105901dffc624d696d"})
-    api("https://api.github.com/repos/Wboyx/foxy-roulette/contents/de-nodes.json", "PUT",
-        {"message": "sync nodes from gist (post-repair)",
-         "content": base64.b64encode(json.dumps({"nodes": nodes}, indent=1).encode()).decode()})
+    payload = {"message": "sync nodes from gist (post-repair)",
+               "content": base64.b64encode(json.dumps({"nodes": nodes}, indent=1).encode()).decode()}
+    try:
+        cur = api("https://api.github.com/repos/Wboyx/foxy-roulette/contents/de-nodes.json")
+        if "sha" in cur: payload["sha"] = cur["sha"]
+    except Exception: pass
+    api("https://api.github.com/repos/Wboyx/foxy-roulette/contents/de-nodes.json", "PUT", payload)
     return nodes
 
 def redeploy_watch():
@@ -171,7 +175,7 @@ def redeploy_watch():
 
 def main():
     # گارد: بدون ابزار تست هرگز چیزی را حذف نکن (ضد false-negative)
-    for f in ("vless_bridge.py", "de-worker.js"):
+    for f in ("vless_bridge.py", "de-worker.js", "foxy-watch.js", "watch-key.txt"):
         if not os.path.exists(f):
             raise SystemExit(f"فایل {f} نیست — لغو کامل (هیچ حذفی انجام نشد)")
     out = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "nodes": {}}
