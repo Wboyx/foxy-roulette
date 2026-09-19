@@ -15,6 +15,12 @@ COUNTRIES = {
     "NL": {"worker": "foxy-nl", "host": "foxy-nl.mahdi-wz10.workers.dev", "label": "\U0001F1F3\U0001F1F1 Netherlands \U0001F98A", "staging": "nl.txt"},
     "FR": {"worker": "foxy-fr", "host": "foxy-fr.mahdi-wz10.workers.dev", "label": "\U0001F1EB\U0001F1F7 France \U0001F98A", "staging": None},
     "GB": {"worker": "foxy-gb", "host": "foxy-gb.mahdi-wz10.workers.dev", "label": "\U0001F1EC\U0001F1E7 United Kingdom \U0001F98A", "staging": None},
+    "CA": {"worker": "foxy-ca", "host": "foxy-ca.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1E6 Canada \U0001F98A", "staging": None},
+    "SG": {"worker": "foxy-sg", "host": "foxy-sg.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EC Singapore \U0001F98A", "staging": None},
+    "JP": {"worker": "foxy-jp", "host": "foxy-jp.mahdi-wz10.workers.dev", "label": "\U0001F1EF\U0001F1F5 Japan \U0001F98A", "staging": None},
+    "CH": {"worker": "foxy-ch", "host": "foxy-ch.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1ED Switzerland \U0001F98A", "staging": None},
+    "SE": {"worker": "foxy-se", "host": "foxy-se.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EA Sweden \U0001F98A", "staging": None},
+    "AT": {"worker": "foxy-at", "host": "foxy-at.mahdi-wz10.workers.dev", "label": "\U0001F1E6\U0001F1F9 Austria \U0001F98A", "staging": None},
 }
 
 def gh_api(url, method="GET", body=None):
@@ -226,6 +232,12 @@ def enable_country(cc, stable):
         print("نگهبان برای نود نو بازسیم شد ✅")
     except Exception as e:
         print("هشدار بازسیم نگهبان:", str(e)[:120])
+    try:
+        cf_api("https://api.cloudflare.com/client/v4/accounts/" + ACC + "/d1/database/" + D1 + "/query",
+               body={"sql": "INSERT INTO active_srv (id, name, updated) VALUES (?1, ?2, datetime('now')) ON CONFLICT(id) DO UPDATE SET name = ?3, updated = datetime('now')",
+                     "params": [cc.lower(), pool[0]["n"], pool[0]["n"]]})
+    except Exception as e:
+        print("active_srv:", str(e)[:80])
     print(f"✅ {cc} فعال شد — استخر {len(pool)} عضوی")
     return True
 
@@ -297,13 +309,13 @@ def hunt_de_backup():
 def main():
     import datetime
     report = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "counts": {}, "stable": {}, "enabled": [], "refreshed": [], "de_rescue": None}
-    counts = harvest(["NL", "FR", "GB"])
+    counts = harvest(list(COUNTRIES))
     report["counts"] = {cc: len(v) for cc, v in counts.items()}
     xray = setup_xray()
     enabled = {n["id"].upper() for n in get_nodes()["nodes"]}
     for cc, cands in counts.items():
         good = []
-        for i, n in enumerate(cands[:10]):
+        for i, n in enumerate(cands[:8]):
             try: r = test(xray, n, 16100 + (i % 35), speed=True)
             except Exception: continue
             if r["exit"].startswith(cc) and r["down"] > 700:
