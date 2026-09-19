@@ -12,5 +12,19 @@
   "p": "443",
   "k": "LXchLsIwtCeUAUgu",
   "kl": "32"
+ },
+ {
+  "n": "gb-portsmouth-2",
+  "h": "149.102.149.207",
+  "p": "80",
+  "k": "LXchLsIwtCeUAUgu",
+  "kl": "32"
+ },
+ {
+  "n": "gb-city of london-3",
+  "h": "94.156.250.148",
+  "p": "7001",
+  "k": "RexnBgU7EV5ADxG",
+  "kl": "32"
  }
 ]
