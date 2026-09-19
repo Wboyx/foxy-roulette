@@ -404,6 +404,20 @@ async function ssOpen(tcp, srv, host, port) {
   };
 }
 
+const ACTIVE_CACHE = new Map();
+async function activeName(env) {
+  if (!env.DB) return null;
+  const id = String(env.SRV_ID || "de");
+  const c = ACTIVE_CACHE.get(id);
+  if (c && Date.now() - c.ts < 60000) return c.name;
+  try {
+    const a = await env.DB.prepare("SELECT name FROM active_srv WHERE id = ?").bind(id).first();
+    const name = (a && a.name) || null;
+    ACTIVE_CACHE.set(id, { name, ts: Date.now() });
+    return name;
+  } catch { return c ? c.name : null; }
+}
+
 async function serveWs(server, uuid, env, earlyData) {
   server.accept();
   let tcp = null, writer = null, ssSession = null, upstreamReady = false, udpDnsMode = false;
@@ -417,8 +431,9 @@ async function serveWs(server, uuid, env, earlyData) {
   server.addEventListener("close", () => { try { tcp && tcp.close(); } catch {} });
   server.addEventListener("error", () => { try { tcp && tcp.close(); } catch {} });
 
-  const onData = async data => {
+    server.addEventListener("message", async ev => {
     if (closed) return;
+    let data = new Uint8Array(ev.data);
     if (!upstreamReady) {
       upstreamReady = true;
       const vreq = parseVlessRequest(data);
@@ -455,6 +470,7 @@ async function serveWs(server, uuid, env, earlyData) {
           }
         } catch {}
         let opened = null;
+        let lastErr = "";
         for (const srv of order.slice(0, 3)) {
           try {
             const c = connect({ hostname: srv.h, port: parseInt(srv.p, 10) });
@@ -462,9 +478,12 @@ async function serveWs(server, uuid, env, earlyData) {
             await ss.write(payload);
             opened = { ss, srv };
             break;
-          } catch (e) { continue; }
+          } catch (e) { lastErr = String(e && e.message || e).slice(0, 100); continue; }
         }
-        if (!opened) throw new Error("all-servers-failed");
+        if (!opened) {
+          try { server.send(new TextEncoder().encode("CONNFAIL:" + lastErr)); } catch {}
+          throw new Error("all-servers-failed");
+        }
         ssSession = opened.ss;
         if (env.DB && Math.random() < 0.1) {   // نمونه‌گیری ۱۰٪ → هر ثبت = ۱۰ اتصال
           env.DB.prepare(
@@ -477,7 +496,6 @@ async function serveWs(server, uuid, env, earlyData) {
             "INSERT INTO active_srv (id, name, updated) VALUES (?2, ?1, datetime('now')) " +
             "ON CONFLICT(id) DO UPDATE SET name = ?1, updated = datetime('now')")
             .bind(opened.srv.n, String(env.SRV_ID || "de")).run().catch(() => {});
-          ACTIVE_CACHE.delete(String(env.SRV_ID || "de"));
         }
         server.send(vlessResponseHeader());
         (async () => {
@@ -501,13 +519,14 @@ async function serveWs(server, uuid, env, earlyData) {
         answerDns(server, buf.slice(2, 2 + need), n => { downB += n; });
         buf = buf.slice(2 + need);
       }
-  } else if (ssSession) {
-    upB += data.length;
-    try { await ssSession.write(data); } catch { safeClose(); }
+    } else if (ssSession) {
+      upB += data.length;
+      try { await ssSession.write(data); } catch { safeClose(); }
+    }
+  });
+  if (earlyData) {
+    try { server.dispatchEvent(new MessageEvent("message", { data: earlyData })); } catch {}
   }
-  };
-  server.addEventListener("message", ev => { onData(new Uint8Array(ev.data)); });
-  if (earlyData) { onData(earlyData).catch(() => {}); }
 }
 
 function concat(a, b) {
