@@ -1,11 +1,17 @@
 {
- "checked_at": "2026-09-18T23:01:13.997330Z",
+ "checked_at": "2026-09-19T00:14:20.931929Z",
  "nodes": {
   "de": {
    "alive": true,
    "attempts": 1,
    "worker": "foxy-de3",
    "host": "foxy-de3.mahdi-wz10.workers.dev"
+  },
+  "us": {
+   "alive": true,
+   "attempts": 1,
+   "worker": "foxy-us",
+   "host": "foxy-us.mahdi-wz10.workers.dev"
   }
  }
 }
