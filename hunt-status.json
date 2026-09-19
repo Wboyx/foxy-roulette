@@ -1,18 +1,30 @@
 {
- "checked_at": "2026-09-19T12:18:24.142909Z",
+ "checked_at": "2026-09-19T12:46:30.823673Z",
  "counts": {
   "NL": 3,
   "FR": 16,
-  "GB": 9
+  "GB": 9,
+  "CA": 19,
+  "SG": 3,
+  "JP": 6,
+  "CH": 1,
+  "SE": 0,
+  "AT": 0
  },
  "stable": {
   "NL": 1,
   "FR": 0,
-  "GB": 5
+  "GB": 4,
+  "CA": 1,
+  "SG": 0,
+  "JP": 5,
+  "CH": 0,
+  "SE": 0,
+  "AT": 0
  },
- "enabled": [],
- "refreshed": [
-  "GB"
+ "enabled": [
+  "JP"
  ],
+ "refreshed": [],
  "de_rescue": null
 }
