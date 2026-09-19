@@ -38,8 +38,8 @@
   },
   {
    "id": "jp",
-   "worker": "foxy-jp",
-   "host": "foxy-jp.mahdi-wz10.workers.dev",
+   "worker": "104",
+   "host": "104.17.147.22",
    "label": "\ud83c\uddef\ud83c\uddf5 Japan \ud83e\udd8a",
    "srv_id": "jp",
    "pool_file": "jp-pool.json",
@@ -50,7 +50,6 @@
   },
   {
    "id": "ca",
-   "prefix": "foxy-ca",
    "worker": "foxy-ca",
    "host": "foxy-ca.mahdi-wz10.workers.dev",
    "label": "\ud83c\udde8\ud83c\udde6 Canada \ud83e\udd8a",
