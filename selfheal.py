@@ -129,7 +129,7 @@ def sync_nodes_file():
         cid = flagmap.get(label[:2])
         if not cid: continue
         host = l.split("@")[1].split(":")[0]
-        nodes.append({"id": cid, "worker": host.split(".")[0], "host": host, "label": label,
+        nodes.append({"id": cid, "prefix": "foxy-" + cid, "worker": host.split(".")[0], "host": host, "label": label,
                       "srv_id": cid, "pool_file": f"{cid}-pool.json", "gist_file": "de.txt",
                       "gist": "13263cbf8ac3342eb6333825fcab2249",
                       "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
@@ -148,7 +148,11 @@ def redeploy_watch():
     import uuid as ul
     nodes = sync_nodes_file()
     code = open("foxy-watch.js", "rb").read()
-    key = open("watch-key.txt").read().strip()
+    try:
+        gist = api("https://api.github.com/gists/13263cbf8ac3342eb6333825fcab2249")
+        key = gist["files"]["watch.txt"]["content"].strip()
+    except Exception:
+        key = open("watch-key.txt").read().strip()
     bindings = [
         {"type": "plain_text", "name": "KEY", "text": key},
         {"type": "secret_text", "name": "GH", "text": GH},
@@ -175,9 +179,13 @@ def redeploy_watch():
 
 def main():
     # گارد: بدون ابزار تست هرگز چیزی را حذف نکن (ضد false-negative)
-    for f in ("vless_bridge.py", "de-worker.js", "foxy-watch.js", "watch-key.txt"):
+    for f in ("vless_bridge.py", "de-worker.js", "foxy-watch.js"):
         if not os.path.exists(f):
             raise SystemExit(f"فایل {f} نیست — لغو کامل (هیچ حذفی انجام نشد)")
+    for node in NODES:
+        pf = node.get("pool_file")
+        if pf and not os.path.exists(pf):
+            raise SystemExit(f"استخر {pf} نیست — لغو کامل (هیچ حذفی انجام نشد)")
     out = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "nodes": {}}
     dirty = False
     for i, node in enumerate(NODES):
