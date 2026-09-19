@@ -184,7 +184,7 @@ def deploy_worker(worker, uuid, srvid, pool, wname):
     b = str(uuidlib.uuid4())
     body = (f"--{b}\r\ncontent-disposition: form-data; name=\"metadata\"; filename=\"m.json\"\r\n"
             f"content-type: application/json\r\n\r\n{json.dumps(meta)}\r\n"
-            f"--{b}\r\ncontent-disposition: form-data; name=\"worker.js\"; filename=\"w.js\"\r\n"
+            f"--{b}\r\ncontent-disposition: form-data; name=\"worker.js\"; filename=\"worker.js\"\r\n"
             f"content-type: application/javascript+module\r\n\r\n").encode() + code + f"\r\n--{b}--\r\n".encode()
     up = cf_api(f"https://api.cloudflare.com/client/v4/accounts/{ACC}/workers/scripts/{worker}",
                 "PUT", ct=f"multipart/form-data; boundary={b}", raw=body)
@@ -312,11 +312,13 @@ def main():
                 elif enable_country(cc, good):
                     report["enabled"].append(cc)
             except Exception as e:
+                report.setdefault("errors", []).append(f"{cc}: {str(e)[:140]}")
                 print(f"خطای فعال‌سازی {cc}:", str(e)[:120])
     try:
         if hunt_de_backup(): report["de_rescue"] = "activated"
     except Exception as e:
         report["de_rescue"] = ("err: " + str(e))[:120]
+        report.setdefault("errors", []).append("de_rescue: " + str(e)[:140])
     put_repo("hunt-status.json", json.dumps(report, ensure_ascii=False, indent=1), "hunt report")
     print("گزارش:", json.dumps(report, ensure_ascii=False))
 
