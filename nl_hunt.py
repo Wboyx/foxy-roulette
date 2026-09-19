@@ -15,6 +15,11 @@ COUNTRIES = {
     "NL": {"worker": "foxy-nl", "host": "foxy-nl.mahdi-wz10.workers.dev", "label": "\U0001F1F3\U0001F1F1 Netherlands \U0001F98A", "staging": "nl.txt"},
     "FR": {"worker": "foxy-fr", "host": "foxy-fr.mahdi-wz10.workers.dev", "label": "\U0001F1EB\U0001F1F7 France \U0001F98A", "staging": None},
     "GB": {"worker": "foxy-gb", "host": "foxy-gb.mahdi-wz10.workers.dev", "label": "\U0001F1EC\U0001F1E7 United Kingdom \U0001F98A", "staging": None},
+    "TR": {"worker": "foxy-tr", "host": "foxy-tr.mahdi-wz10.workers.dev", "label": "\U0001F1F9\U0001F1F7 Turkey \U0001F98A", "staging": None},
+    "AE": {"worker": "foxy-ae", "host": "foxy-ae.mahdi-wz10.workers.dev", "label": "\U0001F1E6\U0001F1EA UAE \U0001F98A", "staging": None},
+    "RU": {"worker": "foxy-ru", "host": "foxy-ru.mahdi-wz10.workers.dev", "label": "\U0001F1F7\U0001F1FA Russia \U0001F98A", "staging": None},
+    "PL": {"worker": "foxy-pl", "host": "foxy-pl.mahdi-wz10.workers.dev", "label": "\U0001F1F5\U0001F1F1 Poland \U0001F98A", "staging": None},
+    "IT": {"worker": "foxy-it", "host": "foxy-it.mahdi-wz10.workers.dev", "label": "\U0001F1EE\U0001F1F9 Italy \U0001F98A", "staging": None},
     "CA": {"worker": "foxy-ca", "host": "foxy-ca.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1E6 Canada \U0001F98A", "staging": None},
     "SG": {"worker": "foxy-sg", "host": "foxy-sg.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EC Singapore \U0001F98A", "staging": None},
     "JP": {"worker": "foxy-jp", "host": "foxy-jp.mahdi-wz10.workers.dev", "label": "\U0001F1EF\U0001F1F5 Japan \U0001F98A", "staging": None},
@@ -245,8 +250,11 @@ def refresh_pool(cc, stable):
     cfg = COUNTRIES[cc]
     try: cur = json.loads(fetch(REPO + f"/{cc.lower()}-pool.json"))
     except Exception: cur = []
-    if len(stable) <= len(cur): return False
-    pool = build_pool(cc, stable)
+    if len(stable) < 2: return False
+    cur_set = {f"{m['h']}:{m['p']}" for m in cur}
+    new_set = {f"{s['server']}:{s['port']}" for s in stable[:4]}
+    if cur_set == new_set: return False   # بدون تغییر = بدون دیپلوی
+    pool = build_pool(cc, stable)         # جایگزینی کامل (کیفیت > تعداد)
     line = line_of(gist_files()["de.txt"], cfg["host"])
     if not line: return False
     uuid = uuid_from_line(line)
@@ -325,6 +333,7 @@ def main():
                     if rr["exit"].startswith(cc) and rr["down"] > 700: ok += 1
                 if ok >= 2: good.append(r); print(f"پایدار ✅ {cc} {n['server']}:{n['port']}")
         report["stable"][cc] = len(good)
+        good.sort(key=lambda r: r.get("ping") or 9999)   # درس کانادا: کم‌پینگ‌ترین اول
         if len(good) >= 2:
             try:
                 if cc in enabled:
