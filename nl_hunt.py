@@ -178,5 +178,95 @@ def main():
     gh_api(f"https://api.github.com/gists/{GIST}", "PATCH", {"files": {"de.txt": {"content": new_content}}})
     print("gist به‌روز شد ✅ — هلند به ساب اضافه شد")
 
+    try:
+        hunt_de_backup()
+    except Exception as e:
+        print("hunt_de_backup خطا:", str(e)[:120])
+
+
+# ═══ نجات‌دهندهٔ آلمان: اگر عضو فعال افت کرده بود، جایگزین پایدار پیدا و فعال کن ═══
+def hunt_de_backup():
+    import json as _json, subprocess, time as _time, urllib.request
+    nodes = gh_api("https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/de-nodes.json")
+    if isinstance(nodes, str): nodes = _json.loads(nodes)
+    de_node = [n for n in nodes["nodes"] if n["id"] == "de"][0]
+    cur_pool = _json.loads(gh_api("https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/de-pool.json"))
+    if isinstance(cur_pool, str): cur_pool = _json.loads(cur_pool)
+    # سلامت عضو فعلی (۲ تست سریع):
+    xray = setup_xray()
+    active_ok = 0
+    for t in range(2):
+        r = test(xray, {"server": cur_pool[0]["h"], "port": int(cur_pool[0]["p"]),
+                        "cipher": "aes-128-gcm" if cur_pool[0]["kl"] == "16" else "aes-256-gcm",
+                        "password": cur_pool[0]["k"]}, 15990, speed=False)
+        if r and r.get("exit", "").startswith("DE"): active_ok += 1
+    print(f"عضو فعلی آلمان: {active_ok}/2")
+    if active_ok >= 2:
+        print("آلمان سالم — شکار جایگزین لازم نیست")
+        return
+    # شکار جایگزین DE (همان منابع):
+    cands = []
+    for url, src in [
+        ("https://cdn.jsdelivr.net/gh/xiaoji235/airport-free/v2ray.txt", "airport"),
+        ("https://raw.githubusercontent.com/Mahdi0024/ProxyCollector/master/sub/proxies.txt", "mahdi0024"),
+        ("https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2", "v2rayfree"),
+        ("https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/refs/heads/main/configs/proxy_configs.txt", "anonymou3")]:
+        try: parse_ss(fetch(url), src, cands)
+        except Exception as e: print("منبع:", str(e)[:40])
+    ips = sorted({c["server"] for c in cands})
+    cm = {}
+    for i in range(0, len(ips), 100):
+        ch = ips[i:i+100]
+        req = urllib.request.Request("http://ip-api.com/batch?fields=query,countryCode",
+              data=_json.dumps(ch).encode(), headers={"content-type": "application/json"})
+        try:
+            for r in _json.load(urllib.request.urlopen(req, timeout=20)): cm[r["query"]] = r.get("countryCode", "")
+        except Exception: pass
+        _time.sleep(2)
+    de = [c for c in cands if cm.get(c["server"]) == "DE"
+          and not (c["server"] == cur_pool[0]["h"] and str(c["port"]) == str(cur_pool[0]["p"]))]
+    print("کاندید جایگزین آلمان:", len(de))
+    best = None
+    for i, n in enumerate(de):
+        ok = 0
+        for t in range(2):
+            r = test(xray, n, 15960 + t, speed=True)
+            if r and r.get("exit", "").startswith("DE") and r.get("down", 0) > 700: ok += 1
+        if ok >= 2:
+            best = n; break
+    if not best:
+        print("جایگزین آلمانی پیدا نشد — عضو فعلی می‌ماند")
+        return
+    # فعال‌سازی: استخر نو (برنده اول) + دیپلوی foxy-de3 + سطر active_srv:
+    new_pool = [{"n": f"de-{best['city'].lower()}-{best['server']}" if best.get("city") else f"de-{best['server']}",
+                 "h": best["server"], "p": str(best["port"]), "k": best["password"],
+                 "kl": "16" if best["cipher"] == "aes-128-gcm" else "32"}] + cur_pool
+    meta = {"main_module": "worker.js", "compatibility_date": "2024-09-23",
+            "bindings": [
+              {"type": "plain_text", "name": "UUID", "text": de_node["uuid"]},
+              {"type": "plain_text", "name": "WNAME", "text": "de-acc1"},
+              {"type": "plain_text", "name": "SRV_ID", "text": "de"},
+              {"type": "plain_text", "name": "SS_POOL", "text": _json.dumps(new_pool)},
+              {"type": "d1", "name": "DB", "id": de_node["d1"]}]}
+    code = urllib.request.urlopen("https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/de-worker.js", timeout=60).read()
+    import uuid as _u
+    b = str(_u.uuid4()); body = (
+        f"--{b}\r\ncontent-disposition: form-data; name=\"metadata\"; filename=\"m.json\"\r\n"
+        f"content-type: application/json\r\n\r\n{_json.dumps(meta)}\r\n"
+        f"--{b}\r\ncontent-disposition: form-data; name=\"worker.js\"; filename=\"w.js\"\r\n"
+        f"content-type: application/javascript+module\r\n\r\n").encode() + code + f"\r\n--{b}--\r\n".encode()
+    up = cf_api(f"https://api.cloudflare.com/client/v4/accounts/{de_node['account']}/workers/scripts/foxy-de3",
+                "PUT", ct=f"multipart/form-data; boundary={b}", raw=body)
+    print("دیپلوی foxy-de3 با عضو نو:", up.get("success"))
+    cf_api("https://api.cloudflare.com/client/v4/accounts/" + de_node["account"] +
+           "/d1/database/" + de_node["d1"] + "/query",
+           body={"sql": "INSERT INTO active_srv (id, name, updated) VALUES ('de', ?1, datetime('now')) "
+                        "ON CONFLICT(id) DO UPDATE SET name = ?1, updated = datetime('now')",
+                 "params": [new_pool[0]["n"]]})
+    gh_api("https://api.github.com/repos/Wboyx/foxy-roulette/contents/de-pool.json", "PUT",
+           {"message": "de backup activated", "content": __import__("base64").b64encode(
+               _json.dumps(new_pool, indent=1).encode()).decode()})
+    print("✅ عضو نو فعال شد:", new_pool[0]["n"])
+
 if __name__ == "__main__":
     main()
