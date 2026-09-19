@@ -55,6 +55,12 @@ async function svcStatus(svc, uuid) {
 }
 async function dispatchRateLimited(env, dead) {
   try {
+    // درجه BBN: فقط مرگ دو-دور-پیاپی (ضد هشدار پنجرهٔ پخش)
+    const last = await env.DB.prepare("SELECT dead FROM watch_log ORDER BY at DESC LIMIT 1").first();
+    if (last && last.dead) {
+      let prev = []; try { prev = JSON.parse(last.dead); } catch {}
+      if (!dead.some(d => prev.includes(d))) return "streak-wait";
+    }
     const row = await env.DB.prepare("SELECT at FROM watch_log WHERE dispatched = 'ok' ORDER BY at DESC LIMIT 1").first();
     if (row) {
       const last = Date.parse(row.at);
