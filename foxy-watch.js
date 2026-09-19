@@ -12,7 +12,6 @@ export default {
     } catch { return new Response(JSON.stringify({ err: "error" }), { status: 500, headers: { "content-type": "application/json" } }); }
   },
 };
-const NODES = [["de", "S_DE"], ["us", "S_US"], ["gb", "S_GB"], ["nl", "S_NL"], ["fr", "S_FR"]];
 async function safeCheck(env) {
   try { return await check(env); } catch { return { at: new Date().toISOString(), err: "error" }; }
 }
@@ -29,8 +28,8 @@ async function check(env) {
     if (cc && wanted.includes(cc) && !uuids[cc]) uuids[cc] = l.slice(8).split("@")[0];
   }
   const dead = [], status = {}, checked = [];
-  for (const [id, prop] of NODES) {
-    const svc = env[prop];
+  for (const id of wanted) {
+    const svc = env["S_" + id.toUpperCase()];
     if (!svc || !uuids[id]) continue;
     checked.push(id);
     let s = await svcStatus(svc, uuids[id]);
