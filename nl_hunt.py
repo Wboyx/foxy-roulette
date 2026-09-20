@@ -12,6 +12,8 @@ CODE_URL = "https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/de-worker
 REPO = "https://raw.githubusercontent.com/Wboyx/foxy-roulette/main"
 AES = {"aes-128-gcm", "aes-256-gcm"}
 COUNTRIES = {
+    "DE": {"worker": "foxy-de-824428", "host": "foxy-de-824428.mahdi-wz10.workers.dev", "label": "\U0001F1E9\U0001F1EA Germany \U0001F98A", "staging": None},
+    "US": {"worker": "foxy-us-818737", "host": "foxy-us-818737.mahdi-wz10.workers.dev", "label": "\U0001F1FA\U0001F1F8 United States \U0001F98A", "staging": None},
     "NL": {"worker": "foxy-nl", "host": "foxy-nl.mahdi-wz10.workers.dev", "label": "\U0001F1F3\U0001F1F1 Netherlands \U0001F98A", "staging": "nl.txt"},
     "FR": {"worker": "foxy-fr", "host": "foxy-fr.mahdi-wz10.workers.dev", "label": "\U0001F1EB\U0001F1F7 France \U0001F98A", "staging": None},
     "GB": {"worker": "foxy-gb", "host": "foxy-gb.mahdi-wz10.workers.dev", "label": "\U0001F1EC\U0001F1E7 United Kingdom \U0001F98A", "staging": None},
@@ -246,21 +248,84 @@ def enable_country(cc, stable):
     print(f"✅ {cc} فعال شد — استخر {len(pool)} عضوی")
     return True
 
-def refresh_pool(cc, stable):
+def cf_pool_of(worker):
+    """استخر واقعی و زنده از CF (منبع حق — نه فایل ریپو)"""
+    try:
+        r = cf_api(f"https://api.cloudflare.com/client/v4/accounts/{ACC}/workers/scripts/{worker}/settings")
+        for b in (r.get("result", {}).get("bindings") or []):
+            if b.get("name") == "SS_POOL":
+                return json.loads(b.get("text") or "[]")
+    except Exception as e:
+        print("cf_pool_of:", str(e)[:80])
+    return []
+
+def probe_member(xray, m, port):
+    n = {"server": m["h"], "port": int(m["p"]),
+         "cipher": "aes-128-gcm" if str(m.get("kl")) == "16" else "aes-256-gcm", "password": m["k"]}
+    return test(xray, n, port, speed=False)
+
+def verify_tunnel(uuid, host, cc, port):
+    """E-پروب تانل از همین رانر: پل WS + خروجی کشور"""
+    import glob, signal
+    for p in glob.glob("/proc/[0-9]*/cmdline"):
+        try:
+            a = open(p, "rb").read().decode(errors="ignore").split("\0")
+            if any("vless_bridge" in x for x in a): os.kill(int(p.split("/")[2]), signal.SIGKILL)
+        except Exception: pass
+    time.sleep(0.5)
+    b = subprocess.Popen(["python3", "-u", "tools/vless_bridge.py", uuid, str(port), host],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(3.5)
+    o = subprocess.run(["curl", "-s", "-m", "13", "--socks5-hostname", f"127.0.0.1:{port}",
+                        "http://ip-api.com/json/?fields=countryCode"], capture_output=True, text=True).stdout
+    try: b.terminate()
+    except Exception: pass
+    return f'"{cc}"' in o
+
+def refresh_pool(cc, stable, xray=None):
+    """قانون استخر-مقدس (BUGLOG #30): عضوِ زندهٔ اثبات‌شده هرگز حذف نمی‌شود؛
+    فقط xray-مرده‌ها با تازه‌تأییدشده تعویض؛ پس از دیپلوی E-پروب ×۲، قرمز = برگشت خودکار."""
     cfg = COUNTRIES[cc]
-    try: cur = json.loads(fetch(REPO + f"/{cc.lower()}-pool.json"))
-    except Exception: cur = []
     if len(stable) < 2: return False
-    cur_set = {f"{m['h']}:{m['p']}" for m in cur}
-    new_set = {f"{s['server']}:{s['port']}" for s in stable[:4]}
-    if cur_set == new_set: return False   # بدون تغییر = بدون دیپلوی
-    pool = build_pool(cc, stable)         # جایگزینی کامل (کیفیت > تعداد)
+    cur = cf_pool_of(cfg["worker"])
+    if not cur:
+        print(f"{cc}: استخر CF خوانده نشد — دست نمی‌زنم"); return False
+    alive, dead = [], []
+    for i, m in enumerate(cur):
+        try:
+            r = probe_member(xray, m, 16700 + (i % 20)) if xray else {"exit": ""}
+        except Exception:
+            r = {"exit": ""}
+        if r["exit"].startswith(cc): alive.append(m)
+        else: dead.append(m)
+    if not dead: return False          # همه زنده‌اند → استخر مقدس است، هیچ‌کاری نکن
     line = line_of(gist_files()["de.txt"], cfg["host"])
     if not line: return False
     uuid = uuid_from_line(line)
-    deploy_worker(cfg["worker"], uuid, cc.lower(), pool, cc.lower() + "-acc1")
-    put_repo(f"{cc.lower()}-pool.json", json.dumps(pool, indent=1), f"{cc} pool refresh")
-    print(f"↑ استخر {cc} به {len(pool)} عضو ارتقا یافت")
+    used = {f"{m['h']}:{m['p']}" for m in cur}
+    pool = list(alive)                  # ① زنده‌ها حفظ
+    for s in stable:                    # ② فقط جاهای خالی با تازه‌تأییدشده‌ها
+        key = f"{s['server']}:{s['port']}"
+        if key in used or len(pool) >= max(4, len(cur)): continue
+        pool.append({"n": f"{cc.lower()}-renew-{len(pool)}", "h": s["server"], "p": str(s["port"]),
+                     "k": s["password"], "kl": "16" if s["cipher"] == "aes-128-gcm" else "32"})
+        used.add(key)
+    if pool == cur or not dead: return False
+    if not deploy_worker(cfg["worker"], uuid, cc.lower(), pool, cc.lower() + "-acc1"):
+        return False
+    time.sleep(75)                      # پخش
+    okc = sum(1 for t in range(2) if verify_tunnel(uuid, cfg["host"], cc, 16850 + t))
+    if okc < 2:                         # ③ قرمز = برگشت خودکار به استخر قبل
+        print(f"↩️ {cc}: پس از نوسازی قرمز ({okc}/2) — برگشت به استخر قبلی")
+        deploy_worker(cfg["worker"], uuid, cc.lower(), cur, cc.lower() + "-acc1")
+        return False
+    try:
+        cf_api(f"https://api.cloudflare.com/client/v4/accounts/{ACC}/d1/database/{D1}/query", "POST",
+               body={"sql": "INSERT INTO active_srv (id, name) VALUES (?1, ?2) ON CONFLICT(id) DO UPDATE SET name = ?2",
+                     "params": [cc.lower(), pool[0]["n"]]})
+    except Exception: pass
+    put_repo(f"{cc.lower()}-pool.json", json.dumps(pool, indent=1), f"{cc}: {len(dead)} عضو مرده تعویض شد، {len(alive)} زنده حفظ شد")
+    print(f"↑ {cc}: {len(dead)} مرده تعویض، {len(alive)} زنده حفظ، E-پروب سبز")
     return True
 
 def hunt_de_backup():
@@ -337,7 +402,7 @@ def main():
         if len(good) >= 2:
             try:
                 if cc in enabled:
-                    if refresh_pool(cc, good): report["refreshed"].append(cc)
+                    if refresh_pool(cc, good, xray): report["refreshed"].append(cc)
                 elif enable_country(cc, good):
                     report["enabled"].append(cc)
             except Exception as e:
