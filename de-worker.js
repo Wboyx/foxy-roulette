@@ -206,7 +206,7 @@ export default {
     const dashed = String(env.UUID || "").trim().toLowerCase();
     const uuid = dashed.replace(/-/g, "");
     const url = new URL(req.url);
-    if (["/usage","/geo","/exit"].includes(url.pathname) && url.searchParams.get("key") !== dashed)
+    if (["/usage","/geo","/exit","/tcheck"].includes(url.pathname) && url.searchParams.get("key") !== dashed)
       return new Response("not found", { status: 404 });
     if (req.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       if (url.pathname === "/usage") {
@@ -235,6 +235,38 @@ export default {
           status: 200, headers: { "content-type": "application/json; charset=utf-8",
             "access-control-allow-origin": "*" },
         });
+      }
+      if (url.pathname === "/tcheck") {
+        // سلامت واقعی تانل: اتصال SS به عضو از دل ورکر (نه فقط زنده‌بودن پروسه)
+        const detail = [];
+        try {
+          const pool = JSON.parse(String(env.SS_POOL || "[]"));
+          if (!pool.length) return new Response(JSON.stringify({ ok: false, why: "empty-pool" }),
+            { status: 200, headers: { "content-type": "application/json" } });
+          const act = await activeName(env).catch(() => null);
+          const order = [...pool].sort((x, y) => (x.n === act ? -1 : (y.n === act ? 1 : 0)));
+          for (const m of order.slice(0, 2)) {
+            for (let attempt = 0; attempt < 2; attempt++) {
+              try {
+                const t0 = Date.now();
+                const c = connect({ hostname: m.h, port: parseInt(m.p, 10) });
+                const sess = await ssOpen(c, m, "ip-api.com", 80);
+                await sess.write(new TextEncoder().encode("GET /json/?fields=countryCode HTTP/1.1\r\nHost: ip-api.com\r\nConnection: close\r\n\r\n"));
+                const r = await Promise.race([sess.read(), new Promise(res => setTimeout(() => res(null), 5000))]);
+                try { c.close(); } catch {}
+                const n = r ? (r.length || r.value && r.value.length || 0) : 0;
+                detail.push(m.n + ":" + (Date.now() - t0) + "ms:" + n + "B");
+                if (n > 0) return new Response(JSON.stringify({ ok: true, member: m.n, ms: Date.now() - t0, detail }),
+                  { status: 200, headers: { "content-type": "application/json" } });
+              } catch (e) { detail.push(m.n + ":err:" + String(e && e.message || e).slice(0, 40)); }
+            }
+          }
+          return new Response(JSON.stringify({ ok: false, detail }), { status: 200,
+            headers: { "content-type": "application/json" } });
+        } catch (e) {
+          return new Response(JSON.stringify({ ok: false, why: String(e && e.message || e).slice(0, 60), detail }),
+            { status: 200, headers: { "content-type": "application/json" } });
+        }
       }
       if (url.pathname === "/exit") {
         // خروجی واقعی این نود: کلادفلر خودش می‌گوید ترافیک رفت از کدام کشور و با چه IP بیرون می‌رود
