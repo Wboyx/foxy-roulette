@@ -260,6 +260,31 @@ def cf_pool_of(worker):
     return []
 
 def probe_member(xray, m, port):
+    if m.get("proto") == "vless":
+        # عضو vless (plain tcp): کانفیگ vless و پروب مستقل
+        cfg = {"log": {"loglevel": "warning"},
+               "inbounds": [{"port": port, "listen": "127.0.0.1", "protocol": "socks"}],
+               "outbounds": [{"protocol": "vless", "settings": {"vnext": [{"address": m["h"], "port": int(m["p"]),
+                   "users": [{"id": m.get("uuid", ""), "encryption": "none", "flow": ""}]}]},
+                   "streamSettings": {"network": "tcp", "security": "none"}}]}
+        json.dump(cfg, open(f"/tmp/hn-{port}.json", "w"))
+        x = subprocess.Popen([xray, "run", "-c", f"/tmp/hn-{port}.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        r = {"ping": None, "down": 0, "exit": ""}
+        try:
+            time.sleep(1.7)
+            g = subprocess.run(["curl", "-s", "-m", "8", "--socks5-hostname", f"127.0.0.1:{port}",
+                                "http://ip-api.com/json/?fields=countryCode,city"], capture_output=True, text=True)
+            try:
+                j = g.json(); r["exit"] = j.get("countryCode", "") + ":" + j.get("city", "")
+            except Exception: pass
+            if r["exit"]:
+                d = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{speed_download}", "-m", "12",
+                                    "--socks5-hostname", f"127.0.0.1:{port}", "https://proof.ovh.net/files/10Mb.dat"],
+                                   capture_output=True, text=True)
+                r["down"] = round(int(d.stdout or 0) / 125)
+        except Exception: pass
+        finally: x.terminate()
+        return r
     n = {"server": m["h"], "port": int(m["p"]),
          "cipher": "aes-128-gcm" if str(m.get("kl")) == "16" else "aes-256-gcm", "password": m["k"]}
     return test(xray, n, port, speed=True)
