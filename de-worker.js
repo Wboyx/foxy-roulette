@@ -249,13 +249,18 @@ export default {
             for (let attempt = 0; attempt < 2; attempt++) {
               try {
                 const t0 = Date.now();
-                const c = connect({ hostname: m.h, port: parseInt(m.p, 10) });
-                const sess = await ssOpen(c, m, "ip-api.com", 80);
-                await sess.write(new TextEncoder().encode("GET /json/?fields=countryCode HTTP/1.1\r\nHost: ip-api.com\r\nConnection: close\r\n\r\n"));
-                const r = await Promise.race([sess.read(), new Promise(res => setTimeout(() => res(null), 5000))]);
-                try { c.close(); } catch {}
-                const n = r ? (r.length || r.value && r.value.length || 0) : 0;
-                detail.push(m.n + ":" + (Date.now() - t0) + "ms:" + n + "B");
+                const job = (async () => {
+                  const c = connect({ hostname: m.h, port: parseInt(m.p, 10) });
+                  const sess = (m.proto === "vless")
+                    ? await vlessOpen(c, m, "ip-api.com", 80)
+                    : await ssOpen(c, m, "ip-api.com", 80);
+                  await sess.write(new TextEncoder().encode("GET /json/?fields=countryCode HTTP/1.1\r\nHost: ip-api.com\r\nConnection: close\r\n\r\n"));
+                  const r = await sess.read();
+                  try { c.close(); } catch {}
+                  return r ? (r.length || (r.value && r.value.length) || 0) : 0;
+                })();
+                const n = await Promise.race([job, new Promise(res => setTimeout(() => res(-1), 6500))]);
+                detail.push(m.n + ":" + (Date.now() - t0) + "ms:" + (n === -1 ? "هنگ" : n + "B"));
                 if (n > 0) return new Response(JSON.stringify({ ok: true, member: m.n, ms: Date.now() - t0, detail }),
                   { status: 200, headers: { "content-type": "application/json" } });
               } catch (e) { detail.push(m.n + ":err:" + String(e && e.message || e).slice(0, 40)); }
