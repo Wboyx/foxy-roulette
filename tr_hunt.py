@@ -113,7 +113,17 @@ def main():
         if tls_alive(c["h"], c["p"], sni):
             alive.append(c)
     print(f"زندهٔ TLS: {len(alive)}")
-    lines = [f"# tr.txt — کاندیدهای ترکیه (تولید خودکار tr_hunt) — {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}"]
+    # حفظ خطوط آلمان (تأییدشده با هندشیک TLS) — tr_hunt فقط TRها را مدیریت می‌کند
+    keep_de = []
+    try:
+        old_txt = requests.get(f"https://gist.githubusercontent.com/Wboyx/{GIST}/raw/tr.txt", timeout=20).text
+        for l in old_txt.splitlines():
+            frag = l.split("#")[1] if "#" in l else ""
+            if l.startswith(("vless://", "trojan://")) and "Germany" in urllib.parse.unquote(frag):
+                keep_de.append(l)
+    except Exception:
+        pass
+    lines = [f"# tr.txt — کاندیدهای ترکیه + آلمان (تولید خودکار tr_hunt) — {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}"] + keep_de
     for i, c in enumerate(alive):
         label = urllib.parse.quote(f"🇹🇷 Turkey 🦊 T{i+1}")
         lines.append(f'{c["uri"]}#{label}')
