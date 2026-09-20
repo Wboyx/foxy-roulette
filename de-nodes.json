@@ -55,8 +55,8 @@
   {
    "id": "ca",
    "prefix": "foxy-ca",
-   "worker": "foxy-ca",
-   "host": "foxy-ca.mahdi-wz10.workers.dev",
+   "worker": "foxy-ca-912172",
+   "host": "foxy-ca-912172.mahdi-wz10.workers.dev",
    "label": "\ud83c\udde8\ud83c\udde6 Canada \ud83e\udd8a",
    "srv_id": "ca",
    "pool_file": "ca-pool.json",
