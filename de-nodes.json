@@ -42,8 +42,8 @@
   {
    "id": "jp",
    "prefix": "foxy-jp",
-   "worker": "foxy-jp-855915",
-   "host": "foxy-jp-855915.mahdi-wz10.workers.dev",
+   "worker": "foxy-jp-898225",
+   "host": "foxy-jp-898225.mahdi-wz10.workers.dev",
    "label": "\ud83c\uddef\ud83c\uddf5 Japan \ud83e\udd8a",
    "srv_id": "jp",
    "pool_file": "jp-pool.json",
