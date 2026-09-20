@@ -37,9 +37,20 @@ async function check(env) {
     status[id] = s;
     if (s !== 200) dead.push(id);
   }
+  // ═══ سلامت تانل (tcheck): فقط گزارش — dispatch فقط برای مرگ پروسه ═══
+  const tunnel = {};
+  for (const id of checked) {
+    const svc = env["S_" + id.toUpperCase()];
+    if (!svc || !uuids[id]) continue;
+    try {
+      const r = await svc.fetch("https://svc/tcheck?key=" + uuids[id]);
+      const j = await r.json();
+      tunnel[id] = { ok: !!j.ok, member: j.member || "", detail: (j.detail || []).slice(0, 2) };
+    } catch { tunnel[id] = { ok: false, member: "", detail: ["err"] }; }
+  }
   let dispatched = null;
   if (dead.length) dispatched = await dispatchRateLimited(env, dead);
-  const report = { at: new Date().toISOString(), checked, status, dead, dispatched };
+  const report = { at: new Date().toISOString(), checked, status, tunnel, dead, dispatched };
   await logReport(env, report);
   return report;
 }
