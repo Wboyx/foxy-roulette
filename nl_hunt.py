@@ -24,7 +24,7 @@ COUNTRIES = {
     "IT": {"worker": "foxy-it", "host": "foxy-it.mahdi-wz10.workers.dev", "label": "\U0001F1EE\U0001F1F9 Italy \U0001F98A", "staging": None},
     "CA": {"worker": "foxy-ca-932128", "host": "foxy-ca-932128.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1E6 Canada \U0001F98A", "staging": None},
     "SG": {"worker": "foxy-sg", "host": "foxy-sg.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EC Singapore \U0001F98A", "staging": None},
-    "JP": {"worker": "foxy-jp", "host": "foxy-jp.mahdi-wz10.workers.dev", "label": "\U0001F1EF\U0001F1F5 Japan \U0001F98A", "staging": None},
+    "JP": {"worker": "foxy-jp-898225", "host": "foxy-jp-898225.mahdi-wz10.workers.dev", "label": "\U0001F1EF\U0001F1F5 Japan \U0001F98A", "staging": None},
     "CH": {"worker": "foxy-ch", "host": "foxy-ch.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1ED Switzerland \U0001F98A", "staging": None},
     "SE": {"worker": "foxy-se", "host": "foxy-se.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EA Sweden \U0001F98A", "staging": None},
     "AT": {"worker": "foxy-at", "host": "foxy-at.mahdi-wz10.workers.dev", "label": "\U0001F1E6\U0001F1F9 Austria \U0001F98A", "staging": None},
