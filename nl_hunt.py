@@ -12,17 +12,17 @@ CODE_URL = "https://raw.githubusercontent.com/Wboyx/foxy-roulette/main/de-worker
 REPO = "https://raw.githubusercontent.com/Wboyx/foxy-roulette/main"
 AES = {"aes-128-gcm", "aes-256-gcm"}
 COUNTRIES = {
-    "DE": {"worker": "foxy-de-824428", "host": "foxy-de-824428.mahdi-wz10.workers.dev", "label": "\U0001F1E9\U0001F1EA Germany \U0001F98A", "staging": None},
-    "US": {"worker": "foxy-us-818737", "host": "foxy-us-818737.mahdi-wz10.workers.dev", "label": "\U0001F1FA\U0001F1F8 United States \U0001F98A", "staging": None},
+    "DE": {"worker": "foxy-de-932015", "host": "foxy-de-932015.mahdi-wz10.workers.dev", "label": "\U0001F1E9\U0001F1EA Germany \U0001F98A", "staging": None},
+    "US": {"worker": "foxy-us-912097", "host": "foxy-us-912097.mahdi-wz10.workers.dev", "label": "\U0001F1FA\U0001F1F8 United States \U0001F98A", "staging": None},
     "NL": {"worker": "foxy-nl", "host": "foxy-nl.mahdi-wz10.workers.dev", "label": "\U0001F1F3\U0001F1F1 Netherlands \U0001F98A", "staging": "nl.txt"},
     "FR": {"worker": "foxy-fr", "host": "foxy-fr.mahdi-wz10.workers.dev", "label": "\U0001F1EB\U0001F1F7 France \U0001F98A", "staging": None},
-    "GB": {"worker": "foxy-gb", "host": "foxy-gb.mahdi-wz10.workers.dev", "label": "\U0001F1EC\U0001F1E7 United Kingdom \U0001F98A", "staging": None},
+    "GB": {"worker": "foxy-gb-898127", "host": "foxy-gb-898127.mahdi-wz10.workers.dev", "label": "\U0001F1EC\U0001F1E7 United Kingdom \U0001F98A", "staging": None},
     "TR": {"worker": "foxy-tr", "host": "foxy-tr.mahdi-wz10.workers.dev", "label": "\U0001F1F9\U0001F1F7 Turkey \U0001F98A", "staging": None},
     "AE": {"worker": "foxy-ae", "host": "foxy-ae.mahdi-wz10.workers.dev", "label": "\U0001F1E6\U0001F1EA UAE \U0001F98A", "staging": None},
     "RU": {"worker": "foxy-ru", "host": "foxy-ru.mahdi-wz10.workers.dev", "label": "\U0001F1F7\U0001F1FA Russia \U0001F98A", "staging": None},
     "PL": {"worker": "foxy-pl", "host": "foxy-pl.mahdi-wz10.workers.dev", "label": "\U0001F1F5\U0001F1F1 Poland \U0001F98A", "staging": None},
     "IT": {"worker": "foxy-it", "host": "foxy-it.mahdi-wz10.workers.dev", "label": "\U0001F1EE\U0001F1F9 Italy \U0001F98A", "staging": None},
-    "CA": {"worker": "foxy-ca", "host": "foxy-ca.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1E6 Canada \U0001F98A", "staging": None},
+    "CA": {"worker": "foxy-ca-932128", "host": "foxy-ca-932128.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1E6 Canada \U0001F98A", "staging": None},
     "SG": {"worker": "foxy-sg", "host": "foxy-sg.mahdi-wz10.workers.dev", "label": "\U0001F1F8\U0001F1EC Singapore \U0001F98A", "staging": None},
     "JP": {"worker": "foxy-jp", "host": "foxy-jp.mahdi-wz10.workers.dev", "label": "\U0001F1EF\U0001F1F5 Japan \U0001F98A", "staging": None},
     "CH": {"worker": "foxy-ch", "host": "foxy-ch.mahdi-wz10.workers.dev", "label": "\U0001F1E8\U0001F1ED Switzerland \U0001F98A", "staging": None},
@@ -262,10 +262,10 @@ def cf_pool_of(worker):
 def probe_member(xray, m, port):
     n = {"server": m["h"], "port": int(m["p"]),
          "cipher": "aes-128-gcm" if str(m.get("kl")) == "16" else "aes-256-gcm", "password": m["k"]}
-    return test(xray, n, port, speed=False)
+    return test(xray, n, port, speed=True)
 
 def verify_tunnel(uuid, host, cc, port):
-    """E-پروب تانل از همین رانر: پل WS + خروجی کشور"""
+    """E-پروب تانل از همین رانر: پل WS + خروجی کشور + حداقل سرعت"""
     import glob, signal
     for p in glob.glob("/proc/[0-9]*/cmdline"):
         try:
@@ -278,9 +278,13 @@ def verify_tunnel(uuid, host, cc, port):
     time.sleep(3.5)
     o = subprocess.run(["curl", "-s", "-m", "13", "--socks5-hostname", f"127.0.0.1:{port}",
                         "http://ip-api.com/json/?fields=countryCode"], capture_output=True, text=True).stdout
+    d = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{speed_download}", "-m", "15",
+                        "--socks5-hostname", f"127.0.0.1:{port}", "https://proof.ovh.net/files/10Mb.dat"],
+                       capture_output=True, text=True).stdout
     try: b.terminate()
     except Exception: pass
-    return f'"{cc}"' in o
+    kbps = round(int(float(d or 0)) / 125)
+    return f'"{cc}"' in o and kbps >= 1500
 
 def refresh_pool(cc, stable, xray=None):
     """قانون استخر-مقدس (BUGLOG #30): عضوِ زندهٔ اثبات‌شده هرگز حذف نمی‌شود؛
@@ -293,18 +297,22 @@ def refresh_pool(cc, stable, xray=None):
     alive, dead = [], []
     for i, m in enumerate(cur):
         try:
-            r = probe_member(xray, m, 16700 + (i % 20)) if xray else {"exit": ""}
+            r = probe_member(xray, m, 16700 + (i % 20)) if xray else {"exit": "", "down": 0}
+            if not r["down"]:
+                r2 = probe_member(xray, m, 16730 + (i % 20))   # دور دوم قبل از حکم (درجه ۲)
+                r = r2 if r2["down"] > r["down"] else r
         except Exception:
-            r = {"exit": ""}
-        if r["exit"].startswith(cc): alive.append(m)
-        else: dead.append(m)
-    if not dead: return False          # همه زنده‌اند → استخر مقدس است، هیچ‌کاری نکن
+            r = {"exit": "", "down": 0}
+        if r["exit"].startswith(cc) and (r.get("down") or 0) >= 1500: alive.append(m)
+        else: dead.append(m)          # مرده یا ضعیف (<۱۵۰۰Kbps) → اسلات تعویض
+    if not dead: return False          # همه قوی‌اند → استخر مقدس، هیچ‌کاری نکن
     line = line_of(gist_files()["de.txt"], cfg["host"])
     if not line: return False
     uuid = uuid_from_line(line)
     used = {f"{m['h']}:{m['p']}" for m in cur}
     pool = list(alive)                  # ① زنده‌ها حفظ
-    for s in stable:                    # ② فقط جاهای خالی با تازه‌تأییدشده‌ها
+    for s in stable:                    # ② فقط جاهای خالی با تازه‌تأییدشده‌های قوی
+        if (s.get("down") or 0) < 2500: continue   # جایگزین باید قوی باشد، نه فقط زنده
         key = f"{s['server']}:{s['port']}"
         if key in used or len(pool) >= max(4, len(cur)): continue
         pool.append({"n": f"{cc.lower()}-renew-{len(pool)}", "h": s["server"], "p": str(s["port"]),
