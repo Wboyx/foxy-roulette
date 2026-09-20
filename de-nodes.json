@@ -3,8 +3,8 @@
   {
    "id": "de",
    "prefix": "foxy-de",
-   "worker": "foxy-de-824428",
-   "host": "foxy-de-824428.mahdi-wz10.workers.dev",
+   "worker": "foxy-de-898024",
+   "host": "foxy-de-898024.mahdi-wz10.workers.dev",
    "label": "\ud83c\udde9\ud83c\uddea Germany \ud83e\udd8a",
    "srv_id": "de",
    "pool_file": "de-pool.json",
