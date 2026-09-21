@@ -178,7 +178,7 @@ def put_repo(path, content, msg):
     if sha: body["sha"] = sha
     gh_api(f"https://api.github.com/repos/Wboyx/foxy-roulette/contents/{path}", "PUT", body)
 
-def build_pool(cc, stable, cap=4):
+def build_pool(cc, stable, cap=6):
     pool = []
     for i, s in enumerate(stable[:cap]):
         city = (s.get("city") or s["exit"].split(":")[-1] if s.get("exit") else s["server"])
@@ -413,6 +413,50 @@ def hunt_de_backup():
     print("✅ نجات آلمان: عضو نو فعال شد:", new_pool[0]["n"])
     return True
 
+def gauntlet_rank(cc, good, xray):
+    """گانتل سنگین: آپلود + اسموک اپ واقعی (یوتیوب/اینستاگرام/گوگل) + دور فاصله‌دار → امتیاز؛ قوی‌ترین اول، بقیه پشتیبان گرم."""
+    import random
+    def sm(port, url, extra=(), post=None):
+        a = ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "-m", "14", "--socks5-hostname", f"127.0.0.1:{port}", url, *extra]
+        if post:
+            a += ["-X", "POST", "--data-binary", "@" + post]
+        return subprocess.run(a, capture_output=True, text=True).stdout.strip()
+    scored = []
+    port = random.randint(17000, 17400)
+    for r0 in good:
+        port += 1
+        n = {"server": r0.get("server") or r0.get("h"), "port": int(r0.get("port") or r0.get("p", 443)),
+             "cipher": r0.get("cipher", "aes-256-gcm"), "password": r0.get("password") or r0.get("k")}
+        json.dump({"log": {"loglevel": "warning"}, "inbounds": [{"port": port, "listen": "127.0.0.1", "protocol": "socks"}],
+                   "outbounds": [{"protocol": "shadowsocks", "settings": {"servers": [{"address": n["server"], "port": n["port"], "method": n["cipher"], "password": n["password"]}]}}, {"protocol": "direct", "tag": "direct"}],
+                   "routing": {"rules": []}}, open(f"/tmp/gt-{port}.json", "w"))
+        x = subprocess.Popen([xray, "run", "-c", f"/tmp/gt-{port}.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        up = 0; apps = 0; ok2 = 0
+        try:
+            time.sleep(1.7)
+            up_r = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{speed_upload}", "-m", "25",
+                                   "--socks5-hostname", f"127.0.0.1:{port}", "-X", "POST",
+                                   "--data-binary", "@/tmp/gt-up.bin", "https://speed.cloudflare.com/__up"],
+                                  capture_output=True, text=True).stdout.strip()
+            open("/tmp/gt-up.bin", "ab").write(os.urandom(512 * 1024))
+            up = int(float(up_r) / 125) if up_r else 0
+            yt = sm(port, "https://www.youtube.com/generate_204")
+            ig = sm(port, "https://www.instagram.com/", ("-A", "Mozilla/5.0"))
+            gg = sm(port, "https://www.google.com/generate_204")
+            apps = (1 if yt in ("204", "200") else 0) + (1 if ig in ("200", "302") else 0) + (1 if gg == "204" else 0)
+            rr2 = test(xray, n, port, speed=True)
+            if rr2.get("exit", "").startswith(cc) and rr2.get("down", 0) > 700: ok2 = 1
+        except Exception:
+            pass
+        finally:
+            x.terminate()
+        down = r0.get("down", 0); ping = r0.get("ping") or 9999
+        score = 0.45 * min(down / 25000, 1) + 0.1 * min(up / 5000, 1) + 0.2 * max(0, 1 - ping / 2000) + 0.15 * (apps / 3) + 0.1 * ok2
+        print(f"گانتل {cc} {n['server']} down={down} up={up} apps={apps}/3 دور۲={ok2} → score={score:.2f}")
+        scored.append((score, r0))
+    scored.sort(key=lambda z: -z[0])
+    return [r0 for _, r0 in scored]
+
 def main():
     import datetime
     report = {"checked_at": datetime.datetime.utcnow().isoformat() + "Z", "counts": {}, "stable": {}, "enabled": [], "refreshed": [], "de_rescue": None}
@@ -436,8 +480,8 @@ def main():
         if len(good) >= 2:
             try:
                 if cc in enabled:
-                    if refresh_pool(cc, good, xray): report["refreshed"].append(cc)
-                elif enable_country(cc, good):
+                    if refresh_pool(cc, gauntlet_rank(cc, good, xray), xray): report["refreshed"].append(cc)
+                elif enable_country(cc, gauntlet_rank(cc, good, xray)):
                     report["enabled"].append(cc)
             except Exception as e:
                 report.setdefault("errors", []).append(f"{cc}: {str(e)[:140]}")
