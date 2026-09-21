@@ -124,8 +124,29 @@ def main():
     except Exception:
         pass
     lines = [f"# tr.txt — کاندیدهای ترکیه + آلمان (تولید خودکار tr_hunt) — {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}"] + keep_de
-    for i, c in enumerate(alive):
-        label = urllib.parse.quote(f"🇹🇷 Turkey 🦊 T{i+1}")
+    # حفظ خطوط قدیمی هنوز-زنده در سرِ فهرست (پایداری برچسب T1/T2/... — BUGLOG قاعده: برچسب ثابت مشتری)
+    def host_of(line):
+        try: return line.split("://", 1)[1].split("#")[0].split("?")[0].rsplit("@", 1)[1].rsplit(":", 1)[0]
+        except Exception: return ""
+    def port_of(line):
+        try: return line.split("://", 1)[1].split("#")[0].split("?")[0].rsplit(":", 1)[1]
+        except Exception: return ""
+    alive_hosts = {(c["h"], c["p"]) for c in alive}
+    pinned = []
+    try:
+        for l in old_txt.splitlines():
+            if l.startswith(("vless://", "trojan://")) and "Germany" not in urllib.parse.unquote(l.split("#")[1] if "#" in l else ""):
+                if (host_of(l), port_of(l)) in alive_hosts and l not in pinned:
+                    pinned.append(l)
+    except Exception:
+        pass
+    lines += pinned
+    used = {(host_of(l), port_of(l)) for l in pinned}
+    i = len(pinned)
+    for c in alive:
+        if (c["h"], c["p"]) in used: continue
+        i += 1
+        label = urllib.parse.quote(f"🇹🇷 Turkey 🦊 T{i}")
         lines.append(f'{c["uri"]}#{label}')
     if not alive:
         lines.append("# هیچ کاندید زندهٔ TR در این دور")
