@@ -117,12 +117,12 @@ def sync_nodes_file():
     """de-nodes.json را از gist بازسازی می‌کند (worker/host همیشه واقعی)."""
     gist = api("https://api.github.com/gists/13263cbf8ac3342eb6333825fcab2249")
     content = gist["files"]["de.txt"]["content"]
-    flagmap = {"\U0001F1E9\U0001F1EA": "de", "\U0001F1FA\U0001F1F8": "us", "\U0001F1EC\U0001F1E7": "gb",
+    flagmap = {"\U0001F1E9\U0001F1EA": "de2", "\U0001F1FA\U0001F1F8": "us", "\U0001F1EC\U0001F1E7": "gb",
                "\U0001F1F3\U0001F1F1": "nl", "\U0001F1EB\U0001F1F7": "fr", "\U0001F1E8\U0001F1E6": "ca",
                "\U0001F1F8\U0001F1EC": "sg", "\U0001F1EF\U0001F1F5": "jp", "\U0001F1E8\U0001F1ED": "ch",
                "\U0001F1F8\U0001F1EA": "se", "\U0001F1E6\U0001F1F9": "at", "\U0001F1F9\U0001F1F7": "tr",
                "\U0001F1E6\U0001F1EA": "ae", "\U0001F1F7\U0001F1FA": "ru", "\U0001F1F5\U0001F1F1": "pl",
-               "\U0001F1EE\U0001F1F9": "it"}
+               "\U0001F1EE\U0001F1F9": "it", "\U0001F1EB\U0001F1EE": "fi"}
     nodes = []
     for l in content.splitlines():
         if not l.startswith("vless://"): continue
@@ -132,7 +132,7 @@ def sync_nodes_file():
         if not cid: continue
         host = l.split("@")[1].split(":")[0]
         nodes.append({"id": cid, "prefix": "foxy-" + cid, "worker": host.split(".")[0], "host": host, "label": label,
-                      "srv_id": cid, "pool_file": f"{cid}-pool.json", "gist_file": "de.txt",
+                      "srv_id": cid, "pool_file": (None if cid == "de2" else f"{cid}-pool.json"), "gist_file": "de.txt",
                       "gist": "13263cbf8ac3342eb6333825fcab2249",
                       "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
                       "account": "ee9234f9f2ba43105901dffc624d696d"})
