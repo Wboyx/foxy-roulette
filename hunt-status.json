@@ -1,8 +1,8 @@
 {
- "checked_at": "2026-09-20T21:01:20.448169Z",
+ "checked_at": "2026-09-21T05:23:06.849181Z",
  "counts": {
   "DE": 15,
-  "US": 76,
+  "US": 77,
   "NL": 4,
   "FR": 15,
   "GB": 10,
@@ -11,7 +11,8 @@
   "RU": 7,
   "PL": 2,
   "IT": 2,
-  "CA": 23,
+  "FI": 3,
+  "CA": 24,
   "SG": 3,
   "JP": 6,
   "CH": 1,
@@ -20,8 +21,8 @@
  },
  "stable": {
   "DE": 1,
-  "US": 5,
-  "NL": 0,
+  "US": 8,
+  "NL": 1,
   "FR": 0,
   "GB": 4,
   "TR": 0,
@@ -29,17 +30,18 @@
   "RU": 0,
   "PL": 0,
   "IT": 1,
-  "CA": 1,
+  "FI": 1,
+  "CA": 2,
   "SG": 0,
-  "JP": 5,
+  "JP": 4,
   "CH": 0,
   "SE": 0,
   "AT": 0
  },
  "enabled": [],
  "refreshed": [],
- "de_rescue": "err: HTTP Error 405: Method Not Allowed",
+ "de_rescue": "err: list index out of range",
  "errors": [
-  "de_rescue: HTTP Error 405: Method Not Allowed"
+  "de_rescue: list index out of range"
  ]
 }
