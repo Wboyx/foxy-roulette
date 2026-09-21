@@ -432,13 +432,14 @@ def gauntlet_rank(cc, good, xray):
                    "routing": {"rules": []}}, open(f"/tmp/gt-{port}.json", "w"))
         x = subprocess.Popen([xray, "run", "-c", f"/tmp/gt-{port}.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         up = 0; apps = 0; ok2 = 0
+        if not os.path.exists("/tmp/gt-up.bin") or os.path.getsize("/tmp/gt-up.bin") < 1024 * 1024:
+            open("/tmp/gt-up.bin", "wb").write(os.urandom(2 * 1024 * 1024))
         try:
             time.sleep(1.7)
             up_r = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{speed_upload}", "-m", "25",
                                    "--socks5-hostname", f"127.0.0.1:{port}", "-X", "POST",
                                    "--data-binary", "@/tmp/gt-up.bin", "https://speed.cloudflare.com/__up"],
                                   capture_output=True, text=True).stdout.strip()
-            open("/tmp/gt-up.bin", "ab").write(os.urandom(512 * 1024))
             up = int(float(up_r) / 125) if up_r else 0
             yt = sm(port, "https://www.youtube.com/generate_204")
             ig = sm(port, "https://www.instagram.com/", ("-A", "Mozilla/5.0"))
