@@ -39,6 +39,13 @@ async function check(env) {
   }
   // ═══ سلامت تانل (tcheck): فقط گزارش — dispatch فقط برای مرگ پروسه ═══
   const tunnel = {};
+  // گرهٔ اختصاصی آلمان-۲: بایندینگ سرویس رله (fetch بیرونیِ هم‌اکانت = 404)
+  if (env.S_DE2) {
+    try {
+      const r = await env.S_DE2.fetch("https://svc/health");
+      tunnel.de2 = { ok: r.status === 200, member: "relay+render", detail: ["HTTP " + r.status] };
+    } catch { tunnel.de2 = { ok: false, member: "relay+render", detail: ["err"] }; }
+  }
   for (const id of checked) {
     const svc = env["S_" + id.toUpperCase()];
     if (!svc || !uuids[id]) continue;
