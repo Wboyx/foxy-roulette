@@ -1,19 +1,6 @@
 {
  "nodes": [
   {
-   "id": "de",
-   "prefix": "foxy-de",
-   "worker": "foxy-de-953951",
-   "host": "foxy-de-953951.mahdi-wz10.workers.dev",
-   "label": "\ud83c\udde9\ud83c\uddea Germany \ud83e\udd8a",
-   "srv_id": "de",
-   "pool_file": "de-pool.json",
-   "gist_file": "de.txt",
-   "gist": "13263cbf8ac3342eb6333825fcab2249",
-   "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
-   "account": "ee9234f9f2ba43105901dffc624d696d"
-  },
-  {
    "id": "us",
    "prefix": "foxy-us",
    "worker": "foxy-us-912097",
@@ -66,13 +53,26 @@
    "account": "ee9234f9f2ba43105901dffc624d696d"
   },
   {
-   "id": "de",
+   "id": "de2",
    "prefix": "foxy-de",
    "worker": "foxy-de-relay",
    "host": "foxy-de-relay.mahdi-wz10.workers.dev",
    "label": "\ud83c\udde9\ud83c\uddea Germany \ud83e\udd8a 2",
-   "srv_id": "de",
-   "pool_file": "de-pool.json",
+   "srv_id": "de2",
+   "pool_file": null,
+   "gist_file": "de.txt",
+   "gist": "13263cbf8ac3342eb6333825fcab2249",
+   "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
+   "account": "ee9234f9f2ba43105901dffc624d696d"
+  },
+  {
+   "id": "fi",
+   "prefix": "foxy-fi",
+   "worker": "foxy-fi",
+   "host": "foxy-fi.mahdi-wz10.workers.dev",
+   "label": "\ud83c\uddeb\ud83c\uddee Finland \ud83e\udd8a",
+   "srv_id": "fi",
+   "pool_file": "fi-pool.json",
    "gist_file": "de.txt",
    "gist": "13263cbf8ac3342eb6333825fcab2249",
    "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
