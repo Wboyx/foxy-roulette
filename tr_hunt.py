@@ -147,7 +147,8 @@ def main():
         if (c["h"], c["p"]) in used: continue
         i += 1
         label = urllib.parse.quote(f"🇹🇷 Turkey 🦊 T{i}")
-        lines.append(f'{c["uri"]}#{label}')
+        clean = c["uri"].split("#")[0]
+        lines.append(f'{clean}#{label}')
     if not alive:
         lines.append("# هیچ کاندید زندهٔ TR در این دور")
     content = "\n".join(lines) + "\n"
