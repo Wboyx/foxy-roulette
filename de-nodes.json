@@ -40,19 +40,6 @@
    "account": "ee9234f9f2ba43105901dffc624d696d"
   },
   {
-   "id": "ca",
-   "prefix": "foxy-ca",
-   "worker": "foxy-ca-932128",
-   "host": "foxy-ca-932128.mahdi-wz10.workers.dev",
-   "label": "\ud83c\udde8\ud83c\udde6 Canada \ud83e\udd8a",
-   "srv_id": "ca",
-   "pool_file": "ca-pool.json",
-   "gist_file": "de.txt",
-   "gist": "13263cbf8ac3342eb6333825fcab2249",
-   "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
-   "account": "ee9234f9f2ba43105901dffc624d696d"
-  },
-  {
    "id": "de2",
    "prefix": "foxy-de2",
    "worker": "foxy-de-relay",
@@ -99,6 +86,19 @@
    "label": "\ud83c\uddf3\ud83c\uddf1 Netherlands \ud83e\udd8a",
    "srv_id": "nl",
    "pool_file": "nl-pool.json",
+   "gist_file": "de.txt",
+   "gist": "13263cbf8ac3342eb6333825fcab2249",
+   "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
+   "account": "ee9234f9f2ba43105901dffc624d696d"
+  },
+  {
+   "id": "it",
+   "prefix": "foxy-it",
+   "worker": "foxy-it",
+   "host": "foxy-it.mahdi-wz10.workers.dev",
+   "label": "\ud83c\uddee\ud83c\uddf9 Italy \ud83e\udd8a",
+   "srv_id": "it",
+   "pool_file": "it-pool.json",
    "gist_file": "de.txt",
    "gist": "13263cbf8ac3342eb6333825fcab2249",
    "d1": "3dccbbba-1f23-4664-9803-845e985663b8",
