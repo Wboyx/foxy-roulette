@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # 🦊 شکارچی چندکشوری (هر ۶ ساعت): NL/FR/GB — هر کشور با ≥۲ عضو پایدار خودکار دیپلوی و به ساب می‌آید.
 # + ارتقای استخر کشور فعال + نجات‌دهندهٔ آلمان. uuidها هرگز در ریپو نیستند — فقط در gist.
-import os, json, time, random, base64, subprocess, urllib.request, urllib.parse, uuid as uuidlib
+import os, json, time, random, subprocess, base64, subprocess, urllib.request, urllib.parse, uuid as uuidlib
 
 GH = os.environ["GIST_TOKEN"]
 CF = os.environ["CF_API_TOKEN"]
@@ -447,13 +447,25 @@ def gauntlet_rank(cc, good, xray):
             apps = (1 if yt in ("204", "200") else 0) + (1 if ig in ("200", "302") else 0) + (1 if gg == "204" else 0)
             rr2 = test(xray, n, port, speed=True)
             if rr2.get("exit", "").startswith(cc) and rr2.get("down", 0) > 700: ok2 = 1
+            jp_list = []
+            for pi in range(5):
+                pp = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{time_starttransfer}", "-m", "10",
+                                     "--socks5-hostname", f"127.0.0.1:{port}", "https://www.gstatic.com/generate_204"],
+                                    capture_output=True, text=True).stdout.strip()
+                if pp: jp_list.append(round(float(pp) * 1000))
+                time.sleep(0.3)
+            jit = (max(jp_list) - min(jp_list)) if len(jp_list) >= 3 else 9999
         except Exception:
+            jit = 9999
             pass
         finally:
             x.terminate()
         down = r0.get("down", 0); ping = r0.get("ping") or 9999
-        score = 0.45 * min(down / 25000, 1) + 0.1 * min(up / 5000, 1) + 0.2 * max(0, 1 - ping / 2000) + 0.15 * (apps / 3) + 0.1 * ok2
-        print(f"گانتل {cc} {n['server']} down={down} up={up} apps={apps}/3 دور۲={ok2} → score={score:.2f}")
+        if jit > 150:
+            print(f"گانتل {cc} {n['server']} رد شد — لرزش {jit}ms > 150")
+            continue
+        score = 0.40 * min(down / 25000, 1) + 0.25 * max(0, 1 - jit / 150) + 0.15 * (apps / 3) + 0.1 * min(up / 5000, 1) + 0.1 * ok2
+        print(f"گانتل {cc} {n['server']} down={down} up={up} apps={apps}/3 دور۲={ok2} jit={jit}ms → score={score:.2f}")
         scored.append((score, r0))
     scored.sort(key=lambda z: -z[0])
     return [r0 for _, r0 in scored]
