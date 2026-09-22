@@ -94,8 +94,8 @@
   {
    "id": "it",
    "prefix": "foxy-it",
-   "worker": "foxy-it",
-   "host": "foxy-it.mahdi-wz10.workers.dev",
+   "worker": "foxy-it-055138",
+   "host": "foxy-it-055138.mahdi-wz10.workers.dev",
    "label": "\ud83c\uddee\ud83c\uddf9 Italy \ud83e\udd8a",
    "srv_id": "it",
    "pool_file": "it-pool.json",
