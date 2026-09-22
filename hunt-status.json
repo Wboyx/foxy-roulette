@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-09-21T23:40:42.027735Z",
+ "checked_at": "2026-09-22T00:11:20.730881Z",
  "counts": {
   "DE": 15,
   "US": 57,
@@ -22,7 +22,7 @@
  "stable": {
   "DE": 1,
   "US": 8,
-  "NL": 1,
+  "NL": 2,
   "FR": 0,
   "GB": 4,
   "TR": 0,
@@ -33,12 +33,14 @@
   "FI": 1,
   "CA": 3,
   "SG": 0,
-  "JP": 5,
+  "JP": 4,
   "CH": 0,
   "SE": 1,
   "AT": 0
  },
- "enabled": [],
+ "enabled": [
+  "NL"
+ ],
  "refreshed": [],
  "de_rescue": "err: list index out of range",
  "errors": [
