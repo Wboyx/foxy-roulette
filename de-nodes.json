@@ -55,8 +55,8 @@
   {
    "id": "fi",
    "prefix": "foxy-fi",
-   "worker": "foxy-fi",
-   "host": "foxy-fi.mahdi-wz10.workers.dev",
+   "worker": "foxy-fi-089052",
+   "host": "foxy-fi-089052.mahdi-wz10.workers.dev",
    "label": "\ud83c\uddeb\ud83c\uddee Finland \ud83e\udd8a",
    "srv_id": "fi",
    "pool_file": "fi-pool.json",
