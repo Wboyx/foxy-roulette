@@ -1,7 +1,7 @@
 name: nl-hunt
 on:
   schedule:
-    - cron: "37 */6 * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -9,6 +9,7 @@ permissions:
 
 concurrency:
   group: nl-hunt
+  cancel-in-progress: true
 
 jobs:
   hunt:
