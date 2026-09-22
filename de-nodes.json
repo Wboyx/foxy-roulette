@@ -16,8 +16,8 @@
   {
    "id": "gb",
    "prefix": "foxy-gb",
-   "worker": "foxy-gb-898127",
-   "host": "foxy-gb-898127.mahdi-wz10.workers.dev",
+   "worker": "foxy-gb-036797",
+   "host": "foxy-gb-036797.mahdi-wz10.workers.dev",
    "label": "\ud83c\uddec\ud83c\udde7 United Kingdom \ud83e\udd8a",
    "srv_id": "gb",
    "pool_file": "gb-pool.json",
